@@ -74,7 +74,6 @@ let init_board:board =
   [|'A';'V';'V';'B'|];
   [|'D';'V';'V';'C'|];
   [|'D';'D';'C';'C'|];
-  [|'V';'V';'V';'V'|];
   [|'V';'X';'X';'V'|];
   [|'V';'X';'X';'V'|];
 |];;
@@ -85,7 +84,6 @@ let end_board:board =
   [|'A';'X';'X';'B'|];
   [|'D';'X';'X';'C'|];
   [|'D';'D';'C';'C'|];
-  [|'V';'V';'V';'V'|];
   [|'V';'V';'V';'V'|];
   [|'V';'V';'V';'V'|];
 |];;
@@ -229,7 +227,7 @@ let piece_to_color = function
 
 
 (* Function to generate TikZ code *)
-let generate_tikz (board : board) : string =
+let generate_tikz (board : board) (move:move Option.t) : string =
   let rows = Array.length board in
   let cols = Array.length board.(0) in
   let cell_size = 0.8 in (* Size of each cell in TikZ units *)
@@ -245,7 +243,43 @@ let generate_tikz (board : board) : string =
         (float_of_int c *. cell_size)
         (float_of_int (rows - 1 - r) *. cell_size)
         ((float_of_int c +. 1.0) *. cell_size)
-        ((float_of_int (rows - r)) *. cell_size)
+        ((float_of_int (rows - r)) *. cell_size);
+      ^
+      match move with
+        | None -> ""
+        | Some (p,N) when piece==p -> (
+          Printf.sprintf
+          "\\draw [white, -{Latex[length=2mm]}] (%f,%f) -- (%f,%f);\n"
+          ((float_of_int c +. 0.5) *. cell_size)
+          (float_of_int (rows - 1 - r) *. cell_size)
+          ((float_of_int c +. 0.5) *. cell_size)
+          ((float_of_int (rows - r)) *. cell_size)
+        )
+        | Some (p,S) when piece==p -> (
+          Printf.sprintf
+          "\\draw [white, -{Latex[length=2mm]}] (%f,%f) -- (%f,%f);\n"
+          ((float_of_int c +. 0.5) *. cell_size)
+          ((float_of_int (rows - r)) *. cell_size)
+          ((float_of_int c +. 0.5) *. cell_size)
+          (float_of_int (rows - 1 - r) *. cell_size)
+        )
+        | Some (p,E) when piece==p -> (
+          Printf.sprintf
+          "\\draw [white, -{Latex[length=2mm]}] (%f,%f) -- (%f,%f);\n"
+          (float_of_int c *. cell_size)
+          (float_of_int (rows - 1 - r) *. cell_size +. 0.5)
+          ((float_of_int c +. 1.0) *. cell_size)
+          (float_of_int (rows - 1 - r) *. cell_size +. 0.5)
+        )
+        | Some (p,W) when piece==p -> (
+          Printf.sprintf
+          "\\draw [white, -{Latex[length=2mm]}] (%f,%f) -- (%f,%f);\n"
+          ((float_of_int c +. 1.0) *. cell_size)
+          (float_of_int (rows - 1 - r) *. cell_size +. 0.5)
+          (float_of_int c *. cell_size)
+          (float_of_int (rows - 1 - r) *. cell_size +. 0.5)
+        )
+        | _ -> "";
   in
 
   (* Generate TikZ rectangles for all cells *)
@@ -265,6 +299,8 @@ let generate_tikz (board : board) : string =
       (float_of_int cols *. cell_size)
       (float_of_int rows *. cell_size)
   in
+
+  (* \draw [-{Latex[length=5mm]}] (0,0) -- (2,0); *)
 
   (* Wrap the TikZ code in a figure *)
   Printf.sprintf
@@ -358,12 +394,12 @@ let rec check l b1 b2 = match l with
 
 let rec latex_solution l b1 = match l with
   | [] -> (
-    let tikz_code = generate_tikz b1 in
+    let tikz_code = generate_tikz b1 None in
     tikz_code
   )
   | t::q -> (
     let (ok, b) = apply t b1 in
-    let tikz_code = generate_tikz b1 in
+    let tikz_code = generate_tikz b1 (Some t) in
     tikz_code^(latex_solution q b)
   )
 
