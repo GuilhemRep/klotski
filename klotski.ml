@@ -2,7 +2,7 @@ exception Invalid_move
 exception Timeout
 exception Terminate
 
-let debug = false;;
+let debug = true;;
 let unit_test = false;;
 
 type piece = char
@@ -22,10 +22,10 @@ exception Solution of move list
 type mode = Allpieces | OnlyX 
 
 (* For classic Klotski, OnlyX*)
-let mode = Allpieces;;
+let mode = OnlyX;;
 
 (** Klotski (hard!) *)
-let init_board:board = 
+(* let init_board:board = 
   [|
     [|'A';'X';'X';'C'|];  
     [|'A';'X';'X';'C'|];
@@ -41,33 +41,28 @@ let end_board:board =
     [|'B';'V';'V';'D'|];
     [|'B';'X';'X';'D'|];
     [|'H';'X';'X';'I'|];
+  |];; *)
+
+
+(** Taquin *)
+(* let init_board:board = 
+  [|
+    [|'A';'B';'C';'D'|];  
+    [|'E';'F';'G';'H'|];
+    [|'I';'J';'K';'L'|];
+    [|'M';'N';'O';'V'|];
   |];;
+
+let end_board:board = 
+  [|
+    [|'V';'O';'N';'M'|];  
+    [|'L';'K';'J';'I'|];
+    [|'H';'G';'F';'E'|];
+    [|'D';'C';'B';'A'|];
+  |];; *)
 
 
 (** Easy variant of Klotski *)
-let init_board:board = 
-[|
-  [|'A';'A';'B';'B'|];  
-  [|'A';'V';'V';'B'|];
-  [|'D';'V';'V';'C'|];
-  [|'D';'D';'C';'C'|];
-  [|'V';'V';'V';'V'|];
-  [|'V';'X';'X';'V'|];
-  [|'V';'X';'X';'V'|];
-|];;
-
-let end_board:board = 
-[|
-  [|'A';'A';'B';'B'|];  
-  [|'A';'X';'X';'B'|];
-  [|'D';'X';'X';'C'|];
-  [|'D';'D';'C';'C'|];
-  [|'V';'V';'V';'V'|];
-  [|'V';'V';'V';'V'|];
-  [|'V';'V';'V';'V'|];
-|];;
-
-(** Test *)
 let init_board:board = 
 [|
   [|'A';'A';'B';'B'|];  
@@ -380,7 +375,6 @@ let () =
   assert (     (fst (apply ('D', W) init_board) ) )
   )
 
-
 (** Checks the solution: l(b1)=?b2 *)
 let rec check l b1 b2 = match l with
   | [] -> is_equal b1 b2
@@ -403,14 +397,13 @@ let rec latex_solution l b1 = match l with
     tikz_code^(latex_solution q b)
   )
 
-
 let opposite m = match m with
   | N -> S
   | E -> W
   | W -> E
   | S -> N
 
-let bfs (start_board : board) (max_steps : int) : unit =
+  let bfs (start_board : board) (max_steps : int) : unit =
     let visited = Hashtbl.create max_steps in
     let queue = Queue.create () in
     Queue.push (start_board, 0, []) queue; (* (board, steps, solution) *)
@@ -444,15 +437,30 @@ let bfs (start_board : board) (max_steps : int) : unit =
   
     if debug then print_string "No solution found\n";
     raise Timeout
-    
+
+let write_file (file:string) (s:string) =
+  let oc = open_out file in
+  Printf.fprintf oc "%s" s
+
+let string_to_board (s : string) : board =
+  let lines = String.split_on_char '\n' s in
+  Array.of_list (List.map (fun line -> Array.of_list (List.init (String.length line) (String.get line))) lines)
+(*   
 
 let () =
-  let max_steps = 1000 in
-  let visited = Hashtbl.create max_steps in
-  Hashtbl.add visited init_board ();
+  if (Array.length Sys.argv) = 4 then (
+    let max_steps = 100000 in
+    try (bfs (string_to_board (Sys.argv.(1))) max_steps)
+    with Solution l -> (
+      assert (check (List.rev l) init_board end_board));
+      print_string (latex_solution (List.rev l) init_board )
+  ) else (
+    print_string "Not enough arguments"
+  ) *)
+
+let () =
+  let max_steps = 100000 in
   try (bfs init_board max_steps)
   with Solution l -> (
     assert (check (List.rev l) init_board end_board));
     print_string (latex_solution (List.rev l) init_board )
- 
-

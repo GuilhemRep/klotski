@@ -25,5 +25,8 @@ setup.log
 # Dune generated files
 *.install
 
+# No extension
+klotski
+
 # Local OPAM switch
 _opam/
