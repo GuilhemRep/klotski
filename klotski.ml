@@ -27,32 +27,9 @@ let () =
       \\usepackage{tgpagella}
       \\begin{document}
       \\begin{center}
-      {\\huge Solution}
+      {\\huge Solution in %d}
       \\end{center}"^(Board.latex_solution l start_board)^"\\end{document}");
   );
   ) else (
     print_string "Not enough arguments"
   )
-(* 
-  (** Easy variant of Klotski *)
-  let start_board = 
-  [|
-    [|'A';'A';'B';'B'|];  
-    [|'A';'V';'V';'B'|];
-    [|'D';'V';'V';'C'|];
-    [|'D';'D';'C';'C'|];
-    [|'V';'X';'X';'V'|];
-    [|'V';'X';'X';'V'|]
-  |] in
-
-  let end_board = 
-  [|
-    [|'A';'A';'B';'B'|];  
-    [|'A';'X';'X';'B'|];
-    [|'D';'X';'X';'C'|];
-    [|'D';'D';'C';'C'|];
-    [|'V';'V';'V';'V'|];
-    [|'V';'V';'V';'V'|]
-  |] in *)
-
- 
