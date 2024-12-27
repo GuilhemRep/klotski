@@ -102,7 +102,7 @@ let print_board (board:board) : unit =
   for i=0 to (snd size)-1 do
     print_string "-";
   done;
-  print_newline()
+  print_newline();print_newline()
 
 let move2string m = match m with
   | N -> "N"
@@ -367,7 +367,12 @@ let write_file (file:string) (s:string) =
   Printf.fprintf oc "%s" s
 
 let string_to_board (s : string) : board =
-  let lines = String.split_on_char '\n' s in
+  let rec remove_last l = match l with
+    | [] -> failwith "Bizar"
+    | t::[] -> []
+    |t::q -> t::(remove_last q) in
+  let l = String.split_on_char '\n' s in
+  let lines = remove_last l in
   Array.of_list (List.map (fun line -> Array.of_list (List.init (String.length line) (String.get line))) lines)
 (*   
 

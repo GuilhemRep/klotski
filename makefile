@@ -7,6 +7,6 @@ clean:
 	rm -rf klotski *.cmi *.cmo *~ sol.tex sol.aux sol.log sol.pdf
 
 run:
-	./klotski
+	./klotski start.txt end.txt
 	pdflatex sol.tex
-	rm -rf sol.tex sol.aux sol.log
+	rm -rf *.tex *.aux *.log

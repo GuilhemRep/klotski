@@ -32,6 +32,7 @@ klotski
 *.pdf
 *.log
 *.aux
+*.tex
 
 # Local OPAM switch
 _opam/
