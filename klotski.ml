@@ -22,7 +22,7 @@ exception Solution of move list
 type mode = Allpieces | OnlyX 
 
 (* For classic Klotski, OnlyX*)
-let mode = OnlyX;;
+let mode = Allpieces;;
 
 (** Klotski (hard!) *)
 (* let init_board:board = 
@@ -403,7 +403,59 @@ let opposite m = match m with
   | W -> E
   | S -> N
 
-  let bfs (start_board : board) (max_steps : int) : unit =
+let bfs (start_board : board) (max_steps : int) : unit =
+  let visited = Hashtbl.create max_steps in
+  let queue = Queue.create () in
+  let rec generate_solution board =
+    assert (Hashtbl.mem visited board);
+    let optm = Hashtbl.find visited board in
+    match optm with
+    | None -> []
+    | Some (p,d) -> (
+      let (ok, new_board) = apply (p, opposite d) board in
+      assert ok;
+      (p,d)::(generate_solution new_board)
+    )
+  in
+  let steps = ref 0 in
+  Queue.push start_board queue; (* (board, steps, solution) *)
+  Hashtbl.add visited start_board None;
+
+  while not (Queue.is_empty queue) do
+    let current_board = Queue.pop queue in
+
+    if debug then (
+      Printf.printf "Step %d\n" !steps;
+      print_board current_board
+    );
+
+    if is_finished current_board then raise (Solution (List.rev (generate_solution current_board)))
+    else if !steps < max_steps then (
+      incr steps;
+      if debug then print_string "Detecting neighbours...\n";
+
+      for d = 0 to number_directions - 1 do
+        let current_direction = directions.(d) in
+        for p = 0 to number_pieces - 1 do
+          let current_piece = pieces.(p) in
+          let (ok, next_board) = apply (current_piece, current_direction) current_board in
+          if ok && not (Hashtbl.mem visited next_board) then (
+            Hashtbl.add visited next_board (Some (current_piece, current_direction));
+            Queue.push next_board queue;
+          )
+        done;
+      done
+    )
+  done;
+
+  if debug then print_string "No solution found\n";
+  raise Timeout
+
+
+
+
+
+  (* let bfs (start_board : board) (max_steps : int) : unit =
     let visited = Hashtbl.create max_steps in
     let queue = Queue.create () in
     Queue.push (start_board, 0, []) queue; (* (board, steps, solution) *)
@@ -436,7 +488,7 @@ let opposite m = match m with
     done;
   
     if debug then print_string "No solution found\n";
-    raise Timeout
+    raise Timeout *)
 
 let write_file (file:string) (s:string) =
   let oc = open_out file in
@@ -462,5 +514,6 @@ let () =
   let max_steps = 100000 in
   try (bfs init_board max_steps)
   with Solution l -> (
-    assert (check (List.rev l) init_board end_board));
-    print_string (latex_solution (List.rev l) init_board )
+    assert (check l init_board end_board);
+    print_string (latex_solution l init_board);
+  )
