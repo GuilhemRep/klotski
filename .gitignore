@@ -28,5 +28,10 @@ setup.log
 # No extension
 klotski
 
+#LaTeX and pdf
+*.pdf
+*.log
+*.aux
+
 # Local OPAM switch
 _opam/
