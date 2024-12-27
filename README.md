@@ -10,19 +10,33 @@ Install OCaml, LaTeX
 - Run **make.run** to obtain a pdf file containig the shortest solution if there is one, or an arror if not
 
 For instance, write
+
 *AABB*
+
 *AVVB*
+
 *CVVD*
+
 *CCDD*
+
 *VXXV*
+
 *VXXV*
+
 and
+
 *AABB*
+
 *AXXB*
+
 *CXXD*
+
 *CCDD*
+
 *VVVV*
+
 *VVVV*
+
 for an easy variant of klotski. The letter *V* is reserved for empty slots ("void").
 
 Have fun!
