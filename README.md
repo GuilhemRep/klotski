@@ -24,7 +24,7 @@ For instance, write
 
 *VXXV*
 
-in *start.txt *and
+in *start.txt* and
 
 *AABB*
 
