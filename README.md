@@ -1,5 +1,6 @@
 # Klotski
 A tool to slove any sliding puzzle
+![illustration](img.png) 
 
 ## How to use
 
@@ -44,7 +45,3 @@ The letter **V** is reserved for empty slots ("void"), and **O**     for obstacl
 
 # Modes 
 There are two modes: classical and labyrinth. The first, obtained with **make run** is for puzzles in which the first and last configuration are imposed. The second, obained with **make lab** is for puzzles in which only the piece labeled with **X** has a specified target position.
-
-# Example of an execution
-
-![illustration](img.png) 
