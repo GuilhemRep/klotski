@@ -1,8 +1,9 @@
 exception Invalid_move
 exception Timeout
 exception Terminate
+exception NoSolution
 
-let debug = true;;
+let debug = false;;
 let unit_test = false;;
 
 type piece = char
@@ -35,10 +36,18 @@ let pieces board =
       l := board.(x).(y) :: (!l);
     done;
   done;
-  Array.of_list (List.fold_left aux [] (!l));;
+  let a = (Array.of_list (List.fold_left aux [] (!l))) in
+  Array.fast_sort compare a;
+  a
 
 (** Number of types of pieces *)
-let number_pieces board = Array.length (pieces board);;
+let number_pieces board = Array.length (pieces board)
+
+(** verifys for obvious absence of solution*)
+(*TODO: better version*)
+let basic_check b1 b2 =
+  if pieces b1 <> pieces b2 then raise NoSolution
+
 
 (** Creates a fresh new board *)
 let new_board (size) : board = 
@@ -80,6 +89,7 @@ let copy (board:board) : board =
   a
 
 
+(** Tests whether the puzzle is solved *)
 let is_finished board end_board mode =
   is_equal board end_board mode
 
@@ -104,6 +114,7 @@ let print_board (board:board) : unit =
   done;
   print_newline();print_newline()
 
+  (* 
 let move2string m = match m with
   | N -> "N"
   | S -> "S"
@@ -120,8 +131,9 @@ let rec print_move_list l = match l with
     print_move m;
     print_string ",";
     print_move_list q
-  )
+  ) *)
 
+(** For the latex output *)
 let piece_to_color = function
   | 'A' -> "red"
   | 'B' -> "blue"
@@ -286,15 +298,15 @@ let apply (move : move) (board:board) : bool*board =
   ) with Invalid_move -> (false, new_board)
 
 
-(** Checks the solution: l(b1)=?b2 *)
-let rec check l b1 b2 mode = match l with
+(** verifies the solution: l(b1)=?b2 *)
+let rec verify l b1 b2 mode = match l with
   | [] -> is_equal b1 b2 mode
   | t::q -> (
     let (ok, b) = apply t b1 in
     if not ok then
       false
     else
-      check q b b2 mode
+      verify q b b2 mode
   )
 
 let rec latex_solution l b1 = match l with
@@ -315,6 +327,7 @@ let opposite m = match m with
   | S -> N
 
 let bfs (start_board : board) (end_board : board) (mode: mode) (max_steps : int) : unit =
+  basic_check start_board end_board;
   let discovered = Hashtbl.create max_steps in
   let queue = Queue.create () in
   let rec generate_solution board =
@@ -441,23 +454,11 @@ let write_file (file:string) (s:string) =
   Printf.fprintf oc "%s" s
 
 let string_to_board (s : string) : board =
-  (* let rec remove_last l = match l with
+  let rec remove_last l = match l with
     | [] -> failwith "Bizar"
     | t::[] -> []
-    |t::q -> t::(remove_last q) in *)
+    |t::q -> t::(remove_last q) in
   let l = String.split_on_char '\n' s in
-  (* let lines = remove_last l in *)
-  let lines = l in
+  let lines = remove_last l in
+  (* let lines = l in *)
   Array.of_list (List.map (fun line -> Array.of_list (List.init (String.length line) (String.get line))) lines)
-(*   
-
-let () =
-  if (Array.length Sys.argv) = 4 then (
-    let max_steps = 100000 in
-    try (bfs (string_to_board (Sys.argv.(1))) max_steps)
-    with Solution l -> (
-      assert (check (List.rev l) init_board end_board));
-      print_string (latex_solution (List.rev l) init_board )
-  ) else (
-    print_string "Not enough arguments"
-  ) *)
