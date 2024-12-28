@@ -2,7 +2,7 @@ exception Invalid_move
 exception Timeout
 exception Terminate
 
-let debug = false;;
+let debug = true;;
 let unit_test = false;;
 
 type piece = char
@@ -27,7 +27,7 @@ let pieces board =
   let rec aux l p = match l with
     | []-> [p]
     | t::q when t==p -> l
-    | _ when p=='V'  -> l
+    | _ when p=='V' || p=='O'  -> l
     | t::q -> t::(aux q p) in
   let l = ref [] in
   for x=0 to (fst size)-1 do 
@@ -142,7 +142,7 @@ let piece_to_color = function
 let generate_tikz (board : board) (move:move Option.t) : string =
   let rows = Array.length board in
   let cols = Array.length board.(0) in
-  let cell_size = 0.8 in (* Size of each cell in TikZ units *)
+  let cell_size = 0.7 in (* Size of each cell in TikZ units *)
 
   (* Helper to generate TikZ code for a single cell *)
   let cell_to_tikz (r : int) (c : int) (piece : piece) : string =
@@ -179,17 +179,17 @@ let generate_tikz (board : board) (move:move Option.t) : string =
           Printf.sprintf
           "\\draw [white, -{Latex[length=2mm]}] (%f,%f) -- (%f,%f);\n"
           (float_of_int c *. cell_size)
-          (float_of_int (rows - 1 - r) *. cell_size +. 0.5)
+          (float_of_int (rows - 1 - r) *. cell_size +. 0.5 *. cell_size)
           ((float_of_int c +. 1.0) *. cell_size)
-          (float_of_int (rows - 1 - r) *. cell_size +. 0.5)
+          (float_of_int (rows - 1 - r) *. cell_size +. 0.5 *. cell_size)
         )
         | Some (p,W) when piece==p -> (
           Printf.sprintf
           "\\draw [white, -{Latex[length=2mm]}] (%f,%f) -- (%f,%f);\n"
           ((float_of_int c +. 1.0) *. cell_size)
-          (float_of_int (rows - 1 - r) *. cell_size +. 0.5)
+          (float_of_int (rows - 1 - r) *. cell_size +. 0.5 *. cell_size)
           (float_of_int c *. cell_size)
-          (float_of_int (rows - 1 - r) *. cell_size +. 0.5)
+          (float_of_int (rows - 1 - r) *. cell_size +. 0.5 *. cell_size)
         )
         | _ -> "";
   in
@@ -314,53 +314,127 @@ let opposite m = match m with
   | W -> E
   | S -> N
 
-  let bfs (start_board : board) (end_board : board) (mode: mode) (max_steps : int) : unit =
-    let visited = Hashtbl.create max_steps in
-    let queue = Queue.create () in
-    let rec generate_solution board =
-      assert (Hashtbl.mem visited board);
-      let optm = Hashtbl.find visited board in
-      match optm with
-      | None -> []
-      | Some (p,d) -> (
-        let (ok, new_board) = apply (p, opposite d) board in
-        assert ok;
-        (p,d)::(generate_solution new_board)
-      )
-    in
-    let steps = ref 0 in
-    Queue.push start_board queue; (* (board, steps, solution) *)
-    Hashtbl.add visited start_board None;
-  
-    while not (Queue.is_empty queue) do
-      let current_board = Queue.pop queue in
-  
-      if debug then (
-        Printf.printf "Step %d\n" !steps;
-        print_board current_board
-      );
-  
-      if is_finished current_board end_board mode then raise (Solution (List.rev (generate_solution current_board)))
-      else if !steps < max_steps then (
-        incr steps;
-        if debug then print_string "Detecting neighbours...\n";
-  
-        for d = 0 to number_directions - 1 do
-          let current_direction = directions.(d) in
-          for p = 0 to (number_pieces start_board) - 1 do
-            let current_piece = (pieces start_board).(p) in
-            let (ok, next_board) = apply (current_piece, current_direction) current_board in
-            if ok && not (Hashtbl.mem visited next_board) then (
-              Hashtbl.add visited next_board (Some (current_piece, current_direction));
-              Queue.push next_board queue;
-            )
-          done;
-        done
-      )
-    done;
-  
-    if debug then print_string "No solution found\n";
-    raise Timeout
+let bfs (start_board : board) (end_board : board) (mode: mode) (max_steps : int) : unit =
+  let discovered = Hashtbl.create max_steps in
+  let queue = Queue.create () in
+  let rec generate_solution board =
+    assert (Hashtbl.mem discovered board);
+    let optm = Hashtbl.find discovered board in
+    match optm with
+    | None -> []
+    | Some (p,d) -> (
+      let (ok, new_board) = apply (p, opposite d) board in
+      assert ok;
+      (p,d)::(generate_solution new_board)
+    )
+  in
+  let steps = ref 0 in
+  Queue.push start_board queue;
+  Hashtbl.add discovered start_board None;
+
+  while not (Queue.is_empty queue) do
+    let current_board = Queue.pop queue in
+
+    if debug then (
+      Printf.printf "Step %d\n" !steps;
+      print_board current_board
+    );
+
+    if is_finished current_board end_board mode then raise (Solution (List.rev (generate_solution current_board)))
+    else if !steps < max_steps then (
+      incr steps;
+      if debug then print_string "Detecting neighbours...\n";
+
+      for d = 0 to number_directions - 1 do
+        let current_direction = directions.(d) in
+        for p = 0 to (number_pieces start_board) - 1 do
+          let current_piece = (pieces start_board).(p) in
+          let (ok, next_board) = apply (current_piece, current_direction) current_board in
+          if ok && not (Hashtbl.mem discovered next_board) then (
+            Hashtbl.add discovered next_board (Some (current_piece, current_direction));
+            Queue.push next_board queue;
+          )
+        done;
+      done
+    )
+  done;
+  failwith "No solution"
+
+let bfs_double (start_board : board) (end_board : board) (mode: mode) (max_steps : int) : unit =
+  let discovered = Hashtbl.create max_steps in
+  let visited = Hashtbl.create max_steps in
+  let queue1 = Queue.create () in
+  let queue2 = Queue.create () in
+  let rec generate_solution board =
+    assert (Hashtbl.mem discovered board);
+    let optm = Hashtbl.find discovered board in
+    match optm with
+    | None -> []
+    | Some (p,d) -> (
+      let (ok, new_board) = apply (p, opposite d) board in
+      assert ok;
+      (p,d)::(generate_solution new_board)
+    )
+  in
+  let steps = ref 0 in
+  Queue.push start_board queue1;
+  Queue.push end_board queue2;
+  Hashtbl.add discovered start_board None;
+  Hashtbl.add discovered end_board None;
+
+  while not (Queue.is_empty queue1 || Queue.is_empty queue2) do
+    let current_board1 = Queue.pop queue1 in
+    if debug then (
+      Printf.printf "Step %d\n" !steps;
+      print_board current_board1
+    );
+
+    if Hashtbl.mem visited current_board1 then raise (Solution (List.rev (generate_solution current_board1)))
+    else if !steps < max_steps then (
+      Hashtbl.add visited current_board1 ();
+      incr steps;
+      if debug then print_string "--->Detecting neighbours...\n";
+
+      for d = 0 to number_directions - 1 do
+        let current_direction = directions.(d) in
+        for p = 0 to (number_pieces start_board) - 1 do
+          let current_piece = (pieces start_board).(p) in
+          let (ok, next_board) = apply (current_piece, current_direction) current_board1 in
+          if ok && not (Hashtbl.mem discovered next_board) then (
+            Hashtbl.add discovered next_board (Some (current_piece, current_direction));
+            Queue.push next_board queue1;
+          )
+        done;
+      done
+    );
+
+
+    let current_board2 = Queue.pop queue2 in
+    if debug then (
+      Printf.printf "Step %d\n" !steps;
+      print_board current_board2
+    );
+
+    if Hashtbl.mem visited current_board2 then raise (Solution (List.rev (generate_solution current_board2)))
+    else if !steps < max_steps then (
+      Hashtbl.add visited current_board2 ();
+      incr steps;
+      if debug then print_string "<---Detecting neighbours...\n";
+
+      for d = 0 to number_directions - 1 do
+        let current_direction = directions.(d) in
+        for p = 0 to (number_pieces start_board) - 1 do
+          let current_piece = (pieces start_board).(p) in
+          let (ok, next_board) = apply (current_piece, current_direction) current_board2 in
+          if ok && not (Hashtbl.mem discovered next_board) then (
+            Hashtbl.add discovered next_board (Some (current_piece, current_direction));
+            Queue.push next_board queue2;
+          )
+        done;
+      done
+    )
+  done;
+  failwith "No solution"
 
 let write_file (file:string) (s:string) =
   let oc = open_out file in
