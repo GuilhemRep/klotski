@@ -26,9 +26,9 @@ type mode = Allpieces | OnlyX
 let pieces board =
   let size = (Array.length board,Array.length board.(0)) in
   let rec aux l p = match l with
+    | _ when (p=='V' || p=='O')  -> l
     | []-> [p]
     | t::q when t==p -> l
-    | _ when p=='V' || p=='O'  -> l
     | t::q -> t::(aux q p) in
   let l = ref [] in
   for x=0 to (fst size)-1 do 
@@ -146,6 +146,11 @@ let piece_to_color = function
   | 'I' -> "teal"
   | 'J' -> "violet"
   | 'K' -> "lime"
+  | 'L' -> "pink"
+  | 'M' -> "teal"
+  | 'N' -> "purple"
+  | 'P' -> "brown"
+  | 'O' -> "gray"
   | 'X' -> "black"
   | _ -> "lightgray"
 
@@ -168,6 +173,14 @@ let generate_tikz (board : board) (move:move Option.t) : string =
         (float_of_int (rows - 1 - r) *. cell_size)
         ((float_of_int c +. 1.0) *. cell_size)
         ((float_of_int (rows - r)) *. cell_size);
+      ^
+      (*The border*)
+      Printf.sprintf
+        "\\draw[black] (%f, %f) rectangle (%f, %f);\n"
+        (float_of_int c *. cell_size)
+        (float_of_int (rows - 1 - r) *. cell_size)
+        ((float_of_int c +. 1.0) *. cell_size)
+        ((float_of_int (rows - r)) *. cell_size)
       ^
       match move with
         | None -> ""
@@ -309,7 +322,8 @@ let rec verify l b1 b2 mode = match l with
       verify q b b2 mode
   )
 
-let rec latex_solution l b1 = match l with
+let latex_solution l b1 = 
+  let rec aux l b1 count = match l with
   | [] -> (
     let tikz_code = generate_tikz b1 None in
     tikz_code
@@ -317,8 +331,9 @@ let rec latex_solution l b1 = match l with
   | t::q -> (
     let (ok, b) = apply t b1 in
     let tikz_code = generate_tikz b1 (Some t) in
-    tikz_code^(latex_solution q b)
-  )
+    tikz_code^(if count mod 4==0 then "\n" else "")^(aux q b (count+1))
+  ) in
+  aux l b1 1
 
 let opposite m = match m with
   | N -> S
@@ -327,7 +342,7 @@ let opposite m = match m with
   | S -> N
 
 let bfs (start_board : board) (end_board : board) (mode: mode) (max_steps : int) : unit =
-  basic_check start_board end_board;
+  (* basic_check start_board end_board; *)
   let discovered = Hashtbl.create max_steps in
   let queue = Queue.create () in
   let rec generate_solution board =
@@ -358,15 +373,15 @@ let bfs (start_board : board) (end_board : board) (mode: mode) (max_steps : int)
       incr steps;
       if debug then print_string "Detecting neighbours...\n";
 
-      for d = 0 to number_directions - 1 do
-        let current_direction = directions.(d) in
-        for p = 0 to (number_pieces start_board) - 1 do
-          let current_piece = (pieces start_board).(p) in
-          let (ok, next_board) = apply (current_piece, current_direction) current_board in
-          if ok && not (Hashtbl.mem discovered next_board) then (
-            Hashtbl.add discovered next_board (Some (current_piece, current_direction));
-            Queue.push next_board queue;
-          )
+      for p = 0 to (number_pieces start_board) - 1 do
+        let current_piece = (pieces start_board).(p) in
+          for d = 0 to number_directions - 1 do
+            let current_direction = directions.(d) in
+            let (ok, next_board) = apply (current_piece, current_direction) current_board in
+            if ok && not (Hashtbl.mem discovered next_board) then (
+              Hashtbl.add discovered next_board (Some (current_piece, current_direction));
+              Queue.push next_board queue;
+            )
         done;
       done
     )
