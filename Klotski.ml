@@ -33,6 +33,8 @@ Board.write_file "sol.tex" ("\\documentclass[12pt]{article}
 \\end{center}"^(Board.latex_solution l start_board)^"\\end{document}");
 )
 | Board.NoSolution -> failwith "No solution"
-) else (
+)
+
+else (
   print_string "Not enough arguments"
 )

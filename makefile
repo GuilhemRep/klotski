@@ -1,10 +1,10 @@
 all:
-	ocamlc -c board.ml
+	ocamlc -c Board.ml
 	ocamlc -c Klotski.ml
-	ocamlc -o Klotski board.cmo Klotski.cmo
+	ocamlc -o klotski Board.cmo Klotski.cmo
 
 clean:
-	rm -rf Klotski *.cmi *.cmo *~ sol.tex sol.aux sol.log sol.pdf
+	rm -rf klotski *.cmi *.cmo *~ sol.tex sol.aux sol.log sol.pdf
 
 run:
 	./Klotski start.txt end.txt 0
