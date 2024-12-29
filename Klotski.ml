@@ -1,3 +1,5 @@
+open Board
+
 let () =
   if (Array.length Sys.argv) = 4 then (
     let ic = open_in (Sys.argv.(1)) in
