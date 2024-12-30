@@ -38,7 +38,7 @@ end = struct
   let pieces board =
     let size = (Array.length board,Array.length board.(0)) in
     let rec aux l p = match l with
-      | _ when (p=='V' || p=='O')  -> l
+      | _ when (p=='_' || p=='.')  -> l
       | []-> [p]
       | t::q when t==p -> l
       | t::q -> t::(aux q p) in
@@ -64,7 +64,7 @@ end = struct
   let new_board (size) : board = 
     let a = Array.make (fst size) [||] in 
     for i=0 to (fst size)-1 do
-      let b = Array.make (snd size) 'V' in 
+      let b = Array.make (snd size) '_' in 
       a.(i) <- b
     done;
     a
@@ -91,7 +91,7 @@ end = struct
     let size = (Array.length board,Array.length board.(0)) in
     let a = Array.make (fst size) [||] in 
     for x=0 to (fst size)-1 do
-      let b = Array.make (snd size) 'V' in 
+      let b = Array.make (snd size) '_' in 
       for y=0 to (snd size)-1 do
         b.(y) <- board.(x).(y)
       done;
@@ -160,7 +160,7 @@ end = struct
     | 'M' -> "teal"
     | 'N' -> "purple"
     | 'P' -> "brown"
-    | 'O' -> "gray"
+    | '.' -> "gray"
     | 'X' -> "black"
     | _ -> "lightgray"
 
@@ -173,7 +173,7 @@ end = struct
 
     (* Helper to generate TikZ code for a single cell *)
     let cell_to_tikz (r : int) (c : int) (piece : piece) : string =
-      if piece = 'V' then "" (* Skip empty cells *)
+      if piece = '_' then "" (* Skip empty cells *)
       else
         let color = piece_to_color piece in
         Printf.sprintf
@@ -270,9 +270,9 @@ end = struct
             for y=0 to (snd size)-1 do
               if board.(x).(y) == p then (
           if x==0 then raise Invalid_move
-          else if not (board.(x-1).(y) == p || board.(x-1).(y) == 'V') then raise Invalid_move;
+          else if not (board.(x-1).(y) == p || board.(x-1).(y) == '_') then raise Invalid_move;
           new_board.(x-1).(y) <- p;
-          new_board.(x).(y) <- 'V'
+          new_board.(x).(y) <- '_'
               )
         done;
       done;
@@ -283,9 +283,9 @@ end = struct
           for y=(snd size)-1 downto 0 do
             if board.(x).(y) == p then (
           if x==(fst size)-1 then raise Invalid_move
-          else if not (board.(x+1).(y) == p || board.(x+1).(y) == 'V') then raise Invalid_move;
+          else if not (board.(x+1).(y) == p || board.(x+1).(y) == '_') then raise Invalid_move;
           new_board.(x+1).(y) <- p; 
-          new_board.(x).(y) <- 'V'
+          new_board.(x).(y) <- '_'
             )
         done;
       done;
@@ -296,9 +296,9 @@ end = struct
           for y=(snd size)-1 downto 0 do
             if board.(x).(y) == p then (
           if y==(snd size)-1 then raise Invalid_move
-          else if not (board.(x).(y+1) == p || board.(x).(y+1) == 'V') then raise Invalid_move;
+          else if not (board.(x).(y+1) == p || board.(x).(y+1) == '_') then raise Invalid_move;
           new_board.(x).(y+1) <- p;
-          new_board.(x).(y) <- 'V'
+          new_board.(x).(y) <- '_'
             )
         done;
       done;
@@ -309,9 +309,9 @@ end = struct
           for y=0 to (snd size)-1 do
             if board.(x).(y) == p then (
           if y==0 then raise Invalid_move
-          else if not (board.(x).(y-1) == p || board.(x).(y-1) == 'V') then raise Invalid_move;
+          else if not (board.(x).(y-1) == p || board.(x).(y-1) == '_') then raise Invalid_move;
           new_board.(x).(y-1) <- p;
-          new_board.(x).(y) <- 'V'
+          new_board.(x).(y) <- '_'
             )
         done;
       done;
@@ -340,7 +340,7 @@ end = struct
     | t::q -> (
       let (ok, b) = apply t b1 in
       let tikz_code = generate_tikz b1 (Some t) in
-      tikz_code^(if count mod 4==0 then "\n" else "")^(aux q b (count+1))
+      tikz_code^(if count mod 5==0 then "\n" else "")^(aux q b (count+1))
     ) in
     aux l b1 1
 

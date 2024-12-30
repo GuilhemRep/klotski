@@ -8,12 +8,12 @@ Install OCaml (good luck) and LaTeX
 
 - Compile the program using **make**
 - Write the start and end configuration in *start.txt* and *end.txt*
-- Run **make run** to obtain a pdf file containig the shortest solution if there is one, or an arror if not
+- Run **make run** or **kake lab** to obtain a pdf file containig the shortest solution if there is one, or an arror if not
 
 The current example in the mentionned files corresponds to the picture above.
 
 ## Special letters
-The letter **V** is reserved for empty slots ("void"), and **O**     for obstacles that cannot move.
+To design a puzzle, keep in mind that the character **_** is reserved for empty slots, and **.** for obstacles that cannot move.
 
 ## Modes 
 There are two modes: classical and labyrinth. The first, obtained with **make run** is for puzzles in which the first and last configuration are imposed. The second, obained with **make lab** is for puzzles in which only the piece labeled with **X** has a specified target position.
