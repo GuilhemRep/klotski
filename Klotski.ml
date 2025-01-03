@@ -19,18 +19,9 @@ if (Array.length Sys.argv) = 4 then (
 
   let mode = if int_of_string (Sys.argv.(3))==0 then (Board.Allpieces) else (Board.OnlyX) in
 
-  try (Board.bfs start_board end_board mode max_steps)
+  try (Board.solve start_board end_board mode max_steps)
   with Board.Solution l -> (
-Board.write_file "sol.tex" ("\\documentclass[12pt]{article}
-\\usepackage[french]{babel}
-\\usepackage{multicol}
-\\setlength{\\parindent}{0cm}
-\\usepackage[a4paper,top=1.2cm,bottom=1.2cm,left=1.2cm,right=1.2cm,marginparwidth=1.75cm]{geometry}
-\\usepackage{amsmath,tikz-cd}
-\\usepackage{tgpagella}
-\\begin{document}
-\\begin{center}
-\\end{center}"^(Board.latex_solution l start_board)^"\\end{document}");
+Board.write_file "sol.tex" (Board.simple_latex l start_board);
 )
 | Board.NoSolution -> failwith "No solution"
 )

@@ -4,11 +4,12 @@ module Board : sig
   type mode = Allpieces | OnlyX 
   exception Solution of move list
   exception NoSolution
-  val bfs : board -> board -> mode -> int -> unit
+  val solve : board -> board -> mode -> int -> unit
   val string_to_board : string -> board
   val print_board : board -> unit
   val latex_solution : move list -> board -> string
   val write_file : string -> string -> unit 
+  val simple_latex : move list -> board -> string
 end = struct 
   exception Invalid_move
   exception Timeout
@@ -38,7 +39,7 @@ end = struct
   let pieces board =
     let size = (Array.length board,Array.length board.(0)) in
     let rec aux l p = match l with
-      | _ when (p=='_' || p=='.')  -> l
+      | _ when (p==' ' || p=='.')  -> l
       | []-> [p]
       | t::q when t==p -> l
       | t::q -> t::(aux q p) in
@@ -64,7 +65,7 @@ end = struct
   let new_board (size) : board = 
     let a = Array.make (fst size) [||] in 
     for i=0 to (fst size)-1 do
-      let b = Array.make (snd size) '_' in 
+      let b = Array.make (snd size) ' ' in 
       a.(i) <- b
     done;
     a
@@ -91,7 +92,7 @@ end = struct
     let size = (Array.length board,Array.length board.(0)) in
     let a = Array.make (fst size) [||] in 
     for x=0 to (fst size)-1 do
-      let b = Array.make (snd size) '_' in 
+      let b = Array.make (snd size) ' ' in 
       for y=0 to (snd size)-1 do
         b.(y) <- board.(x).(y)
       done;
@@ -160,9 +161,9 @@ end = struct
     | 'M' -> "teal"
     | 'N' -> "purple"
     | 'P' -> "brown"
-    | '.' -> "gray"
+    | '.' -> "lightgray"
     | 'X' -> "black"
-    | _ -> "lightgray"
+    | _ -> "gray"
 
 
   (* Function to generate TikZ code *)
@@ -173,7 +174,7 @@ end = struct
 
     (* Helper to generate TikZ code for a single cell *)
     let cell_to_tikz (r : int) (c : int) (piece : piece) : string =
-      if piece = '_' then "" (* Skip empty cells *)
+      if piece = ' ' then "" (* Skip empty cells *)
       else
         let color = piece_to_color piece in
         Printf.sprintf
@@ -184,14 +185,15 @@ end = struct
           ((float_of_int c +. 1.0) *. cell_size)
           ((float_of_int (rows - r)) *. cell_size);
         ^
-        (*The border*)
-        Printf.sprintf
+        (* The border of each piece *)
+        (* Printf.sprintf
           "\\draw[black] (%f, %f) rectangle (%f, %f);\n"
           (float_of_int c *. cell_size)
           (float_of_int (rows - 1 - r) *. cell_size)
           ((float_of_int c +. 1.0) *. cell_size)
           ((float_of_int (rows - r)) *. cell_size)
-        ^
+        ^ *)
+        (* Arrows *)
         match move with
           | None -> ""
           | Some (p,N) when piece==p -> (
@@ -247,15 +249,45 @@ end = struct
         (float_of_int rows *. cell_size)
     in
 
-    (* \draw [-{Latex[length=5mm]}] (0,0) -- (2,0); *)
+     (* Helper to draw black borders between different pieces *)
+     let draw_borders () =
+      let borders = ref "" in
+      for r = 0 to rows - 1 do
+        for c = 0 to cols - 1 do
+          let piece = board.(r).(c) in
+          (* Compare with the cell to the right (vertical line) *)
+          if c < cols - 1 && piece <> board.(r).(c + 1) then
+            borders := !borders ^
+                       Printf.sprintf
+                         "\\draw[black, thick] (%f, %f) -- (%f, %f);\n"
+                         ((float_of_int (c + 1)) *. cell_size)
+                         ((float_of_int (rows - 1 - r)) *. cell_size)
+                         ((float_of_int (c + 1)) *. cell_size)
+                         ((float_of_int (rows - r)) *. cell_size);
+          (* Compare with the cell below (horizontal line) *)
+          if r < rows - 1 && piece <> board.(r + 1).(c) then
+            borders := !borders ^
+                       Printf.sprintf
+                         "\\draw[black, thick] (%f, %f) -- (%f, %f);\n"
+                         ((float_of_int c) *. cell_size)
+                         ((float_of_int (rows - r-1)) *. cell_size)
+                         ((float_of_int (c + 1)) *. cell_size)
+                         ((float_of_int (rows - r-1)) *. cell_size)
+        done
+      done;
+      !borders
+    in
+    (* Add board borders between pieces *)
+    let borders = draw_borders () in
 
     (* Wrap the TikZ code in a figure *)
     Printf.sprintf
-      "\\begin{tikzpicture}[x=%fcm, y=%fcm]\n%s%s\\end{tikzpicture}\n"
+      "\\begin{tikzpicture}[x=%fcm, y=%fcm]\n%s%s%s\\end{tikzpicture}\n"
       cell_size
       cell_size
       tikz_rectangles
       border
+      borders
 
   (** [apply move board] returns a couple [(v,b)] such that [v] is true iff the move [move] can be applied to [board],
     and [b] is the resulting board. If [v] is false, then [b] is irrelevant *)
@@ -270,9 +302,9 @@ end = struct
             for y=0 to (snd size)-1 do
               if board.(x).(y) == p then (
           if x==0 then raise Invalid_move
-          else if not (board.(x-1).(y) == p || board.(x-1).(y) == '_') then raise Invalid_move;
+          else if not (board.(x-1).(y) == p || board.(x-1).(y) == ' ') then raise Invalid_move;
           new_board.(x-1).(y) <- p;
-          new_board.(x).(y) <- '_'
+          new_board.(x).(y) <- ' '
               )
         done;
       done;
@@ -283,9 +315,9 @@ end = struct
           for y=(snd size)-1 downto 0 do
             if board.(x).(y) == p then (
           if x==(fst size)-1 then raise Invalid_move
-          else if not (board.(x+1).(y) == p || board.(x+1).(y) == '_') then raise Invalid_move;
+          else if not (board.(x+1).(y) == p || board.(x+1).(y) == ' ') then raise Invalid_move;
           new_board.(x+1).(y) <- p; 
-          new_board.(x).(y) <- '_'
+          new_board.(x).(y) <- ' '
             )
         done;
       done;
@@ -296,9 +328,9 @@ end = struct
           for y=(snd size)-1 downto 0 do
             if board.(x).(y) == p then (
           if y==(snd size)-1 then raise Invalid_move
-          else if not (board.(x).(y+1) == p || board.(x).(y+1) == '_') then raise Invalid_move;
+          else if not (board.(x).(y+1) == p || board.(x).(y+1) == ' ') then raise Invalid_move;
           new_board.(x).(y+1) <- p;
-          new_board.(x).(y) <- '_'
+          new_board.(x).(y) <- ' '
             )
         done;
       done;
@@ -309,9 +341,9 @@ end = struct
           for y=0 to (snd size)-1 do
             if board.(x).(y) == p then (
           if y==0 then raise Invalid_move
-          else if not (board.(x).(y-1) == p || board.(x).(y-1) == '_') then raise Invalid_move;
+          else if not (board.(x).(y-1) == p || board.(x).(y-1) == ' ') then raise Invalid_move;
           new_board.(x).(y-1) <- p;
-          new_board.(x).(y) <- '_'
+          new_board.(x).(y) <- ' '
             )
         done;
       done;
@@ -350,7 +382,7 @@ end = struct
     | W -> E
     | S -> N
 
-  let bfs (start_board : board) (end_board : board) (mode: mode) (max_steps : int) : unit =
+  let solve (start_board : board) (end_board : board) (mode: mode) (max_steps : int) : unit =
     (* basic_check start_board end_board; *)
     let discovered = Hashtbl.create max_steps in
     let queue = Queue.create () in
@@ -401,7 +433,7 @@ end = struct
     done;
     failwith "No solution"
 
-  let bfs_double (start_board : board) (end_board : board) (mode: mode) (max_steps : int) : unit =
+  let solve_double (start_board : board) (end_board : board) (mode: mode) (max_steps : int) : unit =
     let discovered = Hashtbl.create max_steps in
     let visited = Hashtbl.create max_steps in
     let queue1 = Queue.create () in
@@ -476,6 +508,18 @@ end = struct
       )
     done;
     failwith "No solution"
+
+  let simple_latex l start_board = 
+("\\documentclass[12pt]{article}
+\\usepackage[french]{babel}
+\\usepackage{multicol}
+\\setlength{\\parindent}{0cm}
+\\usepackage[a4paper,top=1.2cm,bottom=1.2cm,left=1.2cm,right=1.2cm,marginparwidth=1.75cm]{geometry}
+\\usepackage{amsmath,tikz-cd}
+\\usepackage{tgpagella}
+\\begin{document}
+\\begin{center}
+\\end{center}"^(latex_solution l start_board)^"\\end{document}")
 
   let write_file (file:string) (s:string) =
     let oc = open_out file in
