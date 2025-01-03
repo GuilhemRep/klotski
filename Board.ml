@@ -185,14 +185,6 @@ end = struct
           ((float_of_int c +. 1.0) *. cell_size)
           ((float_of_int (rows - r)) *. cell_size);
         ^
-        (* The border of each piece *)
-        (* Printf.sprintf
-          "\\draw[black] (%f, %f) rectangle (%f, %f);\n"
-          (float_of_int c *. cell_size)
-          (float_of_int (rows - 1 - r) *. cell_size)
-          ((float_of_int c +. 1.0) *. cell_size)
-          ((float_of_int (rows - r)) *. cell_size)
-        ^ *)
         (* Arrows *)
         match move with
           | None -> ""
@@ -364,7 +356,7 @@ end = struct
     )
 
   let latex_solution l b1 = 
-    let rec aux l b1 count = match l with
+    let rec aux l b1 = match l with
     | [] -> (
       let tikz_code = generate_tikz b1 None in
       tikz_code
@@ -372,9 +364,10 @@ end = struct
     | t::q -> (
       let (ok, b) = apply t b1 in
       let tikz_code = generate_tikz b1 (Some t) in
-      tikz_code^(if count mod 5==0 then "\n" else "")^(aux q b (count+1))
+      tikz_code^(aux q b)
     ) in
-    aux l b1 1
+    
+    aux l b1
 
   let opposite m = match m with
     | N -> S
@@ -511,12 +504,10 @@ end = struct
 
   let simple_latex l start_board = 
 ("\\documentclass[12pt]{article}
-\\usepackage[french]{babel}
 \\usepackage{multicol}
 \\setlength{\\parindent}{0cm}
-\\usepackage[a4paper,top=1.2cm,bottom=1.2cm,left=1.2cm,right=1.2cm,marginparwidth=1.75cm]{geometry}
+\\usepackage[a4paper,top=1cm,bottom=1cm,left=1cm,right=1cm]{geometry}
 \\usepackage{amsmath,tikz-cd}
-\\usepackage{tgpagella}
 \\begin{document}
 \\begin{center}
 \\end{center}"^(latex_solution l start_board)^"\\end{document}")

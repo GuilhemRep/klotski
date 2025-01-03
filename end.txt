@@ -1,7 +1,6 @@
-..._...
-..FJG..
-.FFJGG.
-AA   BB
-.EEKDD.
-..ECD..
-...X...
+AABB
+A  B
+C  D
+CCDD
+ XX 
+ XX  
