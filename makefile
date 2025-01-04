@@ -11,6 +11,11 @@ run:
 	pdflatex sol.tex
 	rm -rf *.aux *.log
 
+test:
+	./klotski start0.txt end0.txt 1
+	pdflatex sol.tex
+	rm -rf *.aux *.log
+
 static:
 	ocamlopt -c Board.ml
 	ocamlopt -c Klotski.ml

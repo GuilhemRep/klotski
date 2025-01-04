@@ -162,65 +162,69 @@ end = struct
     | 'N' -> "purple"
     | 'P' -> "brown"
     | '.' -> "lightgray"
-    | 'X' -> "black"
-    | _ -> "gray"
+    | 'X' -> "darkgray"
+    | _ -> "white"
+
+  let cell_size () = 0.75
 
 
   (* Function to generate TikZ code *)
   let generate_tikz (board : board) (move:move Option.t) : string =
     let rows = Array.length board in
     let cols = Array.length board.(0) in
-    let cell_size = 0.7 in (* Size of each cell in TikZ units *)
+    let cell_size = cell_size() in (* Size of each cell in TikZ units *)
 
     (* Helper to generate TikZ code for a single cell *)
     let cell_to_tikz (r : int) (c : int) (piece : piece) : string =
-      if piece = ' ' then "" (* Skip empty cells *)
-      else
-        let color = piece_to_color piece in
-        Printf.sprintf
-          "\\filldraw[%s] (%f, %f) rectangle (%f, %f);\n"
-          color
-          (float_of_int c *. cell_size)
+      let color = piece_to_color piece in
+      Printf.sprintf
+        "\\filldraw[%s] (%f, %f) rectangle (%f, %f);\n"
+        color
+        (float_of_int c *. cell_size)
+        (float_of_int (rows - 1 - r) *. cell_size)
+        ((float_of_int c +. 1.0) *. cell_size)
+        ((float_of_int (rows - r)) *. cell_size);
+      ^
+      (* Arrows *)
+      match move with
+        | None -> ""
+        | Some (p,N) when piece==p -> (
+          Printf.sprintf
+          "\\draw [white, -{Latex[length=%fmm]}] (%f,%f) -- (%f,%f);\n"
+          (4.*. cell_size)
+          ((float_of_int c +. 0.5) *. cell_size)
           (float_of_int (rows - 1 - r) *. cell_size)
+          ((float_of_int c +. 0.5) *. cell_size)
+          ((float_of_int (rows - r)) *. cell_size)
+        )
+        | Some (p,S) when piece==p -> (
+          Printf.sprintf
+          "\\draw [white, -{Latex[length=%fmm]}] (%f,%f) -- (%f,%f);\n"
+          (4.*. cell_size)
+          ((float_of_int c +. 0.5) *. cell_size)
+          ((float_of_int (rows - r)) *. cell_size)
+          ((float_of_int c +. 0.5) *. cell_size)
+          (float_of_int (rows - 1 - r) *. cell_size)
+        )
+        | Some (p,E) when piece==p -> (
+          Printf.sprintf
+          "\\draw [white, -{Latex[length=%fmm]}] (%f,%f) -- (%f,%f);\n"
+          (4.*. cell_size)
+          (float_of_int c *. cell_size)
+          (float_of_int (rows - 1 - r) *. cell_size +. 0.5 *. cell_size)
           ((float_of_int c +. 1.0) *. cell_size)
-          ((float_of_int (rows - r)) *. cell_size);
-        ^
-        (* Arrows *)
-        match move with
-          | None -> ""
-          | Some (p,N) when piece==p -> (
-            Printf.sprintf
-            "\\draw [white, -{Latex[length=2mm]}] (%f,%f) -- (%f,%f);\n"
-            ((float_of_int c +. 0.5) *. cell_size)
-            (float_of_int (rows - 1 - r) *. cell_size)
-            ((float_of_int c +. 0.5) *. cell_size)
-            ((float_of_int (rows - r)) *. cell_size)
-          )
-          | Some (p,S) when piece==p -> (
-            Printf.sprintf
-            "\\draw [white, -{Latex[length=2mm]}] (%f,%f) -- (%f,%f);\n"
-            ((float_of_int c +. 0.5) *. cell_size)
-            ((float_of_int (rows - r)) *. cell_size)
-            ((float_of_int c +. 0.5) *. cell_size)
-            (float_of_int (rows - 1 - r) *. cell_size)
-          )
-          | Some (p,E) when piece==p -> (
-            Printf.sprintf
-            "\\draw [white, -{Latex[length=2mm]}] (%f,%f) -- (%f,%f);\n"
-            (float_of_int c *. cell_size)
-            (float_of_int (rows - 1 - r) *. cell_size +. 0.5 *. cell_size)
-            ((float_of_int c +. 1.0) *. cell_size)
-            (float_of_int (rows - 1 - r) *. cell_size +. 0.5 *. cell_size)
-          )
-          | Some (p,W) when piece==p -> (
-            Printf.sprintf
-            "\\draw [white, -{Latex[length=2mm]}] (%f,%f) -- (%f,%f);\n"
-            ((float_of_int c +. 1.0) *. cell_size)
-            (float_of_int (rows - 1 - r) *. cell_size +. 0.5 *. cell_size)
-            (float_of_int c *. cell_size)
-            (float_of_int (rows - 1 - r) *. cell_size +. 0.5 *. cell_size)
-          )
-          | _ -> "";
+          (float_of_int (rows - 1 - r) *. cell_size +. 0.5 *. cell_size)
+        )
+        | Some (p,W) when piece==p -> (
+          Printf.sprintf
+          "\\draw [white, -{Latex[length=%fmm]}] (%f,%f) -- (%f,%f);\n"
+          (4.*. cell_size)
+          ((float_of_int c +. 1.0) *. cell_size)
+          (float_of_int (rows - 1 - r) *. cell_size +. 0.5 *. cell_size)
+          (float_of_int c *. cell_size)
+          (float_of_int (rows - 1 - r) *. cell_size +. 0.5 *. cell_size)
+        )
+        | _ -> "";
     in
 
     (* Generate TikZ rectangles for all cells *)
@@ -367,9 +371,9 @@ end = struct
       tikz_code^(if c mod m == 0 then "\n" else "")^(aux q b m (c+1))
     ) in
     let cols = Array.length b1.(0) in
-    let cell_size = 0.7 in 
+    let cell_size = cell_size () in 
     let size_figure = (Int.to_float cols) *. cell_size in
-    let page_width = 26. in
+    let page_width = 150. in
     let number_per_line = Float.to_int (page_width /. size_figure) in
     aux l b1 number_per_line 1
 
