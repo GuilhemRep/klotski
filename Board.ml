@@ -356,7 +356,7 @@ end = struct
     )
 
   let latex_solution l b1 = 
-    let rec aux l b1 = match l with
+    let rec aux l b1 m c= match l with
     | [] -> (
       let tikz_code = generate_tikz b1 None in
       tikz_code
@@ -364,10 +364,14 @@ end = struct
     | t::q -> (
       let (ok, b) = apply t b1 in
       let tikz_code = generate_tikz b1 (Some t) in
-      tikz_code^(aux q b)
+      tikz_code^(if c mod m == 0 then "\n" else "")^(aux q b m (c+1))
     ) in
-    
-    aux l b1
+    let cols = Array.length b1.(0) in
+    let cell_size = 0.7 in 
+    let size_figure = (Int.to_float cols) *. cell_size in
+    let page_width = 26. in
+    let number_per_line = Float.to_int (page_width /. size_figure) in
+    aux l b1 number_per_line 1
 
   let opposite m = match m with
     | N -> S
@@ -523,6 +527,19 @@ end = struct
       |t::q -> t::(remove_last q) in
     let l = String.split_on_char '\n' s in
     let lines = remove_last l in
-    (* let lines = l in *)
-    Array.of_list (List.map (fun line -> Array.of_list (List.init (String.length line) (String.get line))) lines)
+    let board = Array.of_list (List.map (fun line -> Array.of_list (List.init (String.length line) (String.get line))) lines) in
+    for i=0 to (Array.length board -1) do
+      for j=0 to (Array.length board.(0) -1) do
+        if board.(i).(j) == '_' then board.(i).(j) <- ' '
+      done;
+    done;
+    board
 end
+(* 
+...X...
+..FJG..
+.FFJGG.
+AA   BB
+.EEKDD.
+..ECD..
+...C... *)

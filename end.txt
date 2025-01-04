@@ -1,6 +1,6 @@
 AABB
-A  B
-C  D
+A__B
+C__D
 CCDD
  XX 
- XX  
+ XX 
