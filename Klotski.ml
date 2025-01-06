@@ -17,7 +17,11 @@ if (Array.length Sys.argv) = 4 then (
   Board.print_board end_board ;
   let max_steps = 100000 in
 
-  let mode = if int_of_string (Sys.argv.(3))==0 then (Board.Allpieces) else (Board.OnlyX) in
+  let mode = match int_of_string (Sys.argv.(3)) with
+    | 0 -> Board.Allpieces
+    | 1 -> Board.OnlyX
+    | _ -> Board.Shape
+  in
 
   try (Board.solve start_board end_board mode max_steps)
   with Board.Solution l -> (

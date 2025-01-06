@@ -12,7 +12,7 @@ run:
 	rm -rf *.aux *.log
 
 test:
-	./klotski start0.txt end0.txt 1
+	./klotski start0.txt end0.txt 2
 	pdflatex sol.tex
 	rm -rf *.aux *.log
 
@@ -23,5 +23,10 @@ static:
 
 lab:
 	./klotski start.txt end.txt 1
+	pdflatex sol.tex
+	rm -rf *.aux *.log
+
+shape:
+	./klotski start.txt end.txt 2
 	pdflatex sol.tex
 	rm -rf *.aux *.log

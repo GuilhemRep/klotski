@@ -1,7 +1,7 @@
 module Board : sig
   type board
   type move
-  type mode = Allpieces | OnlyX 
+  type mode = Allpieces | OnlyX | Shape
   exception Solution of move list
   exception NoSolution
   val solve : board -> board -> mode -> int -> unit
@@ -33,7 +33,7 @@ end = struct
   (* Allpieces if all the pieces in the solution must be at their place,
     OnlyX if only the position of the piece X matters.
     TODO: accept isomorphic positions *)
-  type mode = Allpieces | OnlyX 
+  type mode = Allpieces | OnlyX | Shape
 
   (** An array with each type of piece only once *)
   let pieces board =
@@ -82,6 +82,10 @@ end = struct
           match mode with
             | Allpieces -> if b1.(x).(y) <> b2.(x).(y) then raise Terminate
             | OnlyX     -> if (b1.(x).(y) == 'X' && b2.(x).(y) <> 'X') then raise Terminate
+            | Shape     -> if  (b1.(x).(y) == ' ' && b2.(x).(y) <> ' ')
+                            || (b1.(x).(y) == '_' && b2.(x).(y) <> '_')
+                            || (b2.(x).(y) == ' ' && b1.(x).(y) <> ' ')
+                            || (b2.(x).(y) == '_' && b1.(x).(y) <> '_') then raise Terminate 
         done;
       done;
       true
