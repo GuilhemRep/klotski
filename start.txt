@@ -2,5 +2,5 @@ AABB
 AXXB
 CXXD
 CCDD
-    
-    
+____
+____

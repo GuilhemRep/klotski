@@ -4,11 +4,11 @@ A tool to slove any sliding puzzle
 
 ## Usage
 - Install OCaml and LaTeX
-- Compile the program using **make**
-- Write the start and end configuration in *start.txt* and *end.txt*
+- Compile the OCaml part using **make**
+- Define the start and end configuration of the puzzle in *start.txt* and *end.txt*
 - Run **make run** or **make lab** to obtain a *pdf* file containig the shortest solution if there is one, or an arror if not
 
-## Designinig a puzzle
+## Designing a puzzle
 A puzzle piece is defined by a letter. The current example corresponds to the above picture.
 
 ## Special letters
