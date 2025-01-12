@@ -30,9 +30,9 @@ end = struct
 
   exception Solution of move list
 
-  (* Allpieces if all the pieces in the solution must be at their place,
+  (** Allpieces if all the pieces in the solution must be at their place,
     OnlyX if only the position of the piece X matters.
-    TODO: accept isomorphic positions *)
+    Shape if only the global chape matters *)
   type mode = Allpieces | OnlyX | Shape
 
   (** An array with each type of piece only once *)
@@ -169,7 +169,7 @@ end = struct
     | 'X' -> "darkgray"
     | _ -> "white"
 
-  let cell_size () = 0.75
+  let cell_size () = 0.6
 
 
   (* Function to generate TikZ code *)

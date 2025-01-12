@@ -1,7 +1,9 @@
-all:
-	ocamlc -c Board.ml
+all: Board.cmo
 	ocamlc -c Klotski.ml
 	ocamlc -o klotski Board.cmo Klotski.cmo
+
+Board.cmo:
+	ocamlc -c Board.ml
 
 clean:
 	rm -rf klotski *.cmi *.cmx *.o *.cmo *~ sol.tex sol.aux sol.log sol.pdf
@@ -12,14 +14,9 @@ run:
 	rm -rf *.aux *.log
 
 test:
-	./klotski start0.txt end0.txt 2
+	./klotski start0.txt end0.txt 1
 	pdflatex sol.tex
 	rm -rf *.aux *.log
-
-static:
-	ocamlopt -c Board.ml
-	ocamlopt -c Klotski.ml
-	ocamlopt -o klotski Board.ml Klotski.ml
 
 lab:
 	./klotski start.txt end.txt 1
