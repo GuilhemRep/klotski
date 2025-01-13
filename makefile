@@ -13,11 +13,6 @@ run:
 	pdflatex sol.tex
 	rm -rf *.aux *.log
 
-test:
-	./klotski start0.txt end0.txt 1
-	pdflatex sol.tex
-	rm -rf *.aux *.log
-
 lab:
 	./klotski start.txt end.txt 1
 	pdflatex sol.tex
