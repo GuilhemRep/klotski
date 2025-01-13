@@ -39,7 +39,7 @@ end = struct
   let pieces board =
     let size = (Array.length board,Array.length board.(0)) in
     let rec aux l p = match l with
-      | _ when (p==' ' || p=='.')  -> l
+      | _ when (p==' ' || p=='_' || p=='.')  -> l
       | []-> [p]
       | t::q when t==p -> l
       | t::q -> t::(aux q p) in
@@ -129,24 +129,6 @@ end = struct
     done;
     print_newline();print_newline()
 
-    (* 
-  let move2string m = match m with
-    | N -> "N"
-    | S -> "S"
-    | E -> "E"
-    | W -> "W"
-
-  let print_move m = let (p,d) = m in 
-    print_char p;
-    print_string (move2string d)
-
-  let rec print_move_list l = match l with
-    | []   -> ()
-    | m::q -> (
-      print_move m;
-      print_string ",";
-      print_move_list q
-    ) *)
 
   (** For the latex output *)
   let piece_to_color = function
@@ -438,82 +420,6 @@ end = struct
     done;
     failwith "No solution"
 
-  let solve_double (start_board : board) (end_board : board) (mode: mode) (max_steps : int) : unit =
-    let discovered = Hashtbl.create max_steps in
-    let visited = Hashtbl.create max_steps in
-    let queue1 = Queue.create () in
-    let queue2 = Queue.create () in
-    let rec generate_solution board =
-      assert (Hashtbl.mem discovered board);
-      let optm = Hashtbl.find discovered board in
-      match optm with
-      | None -> []
-      | Some (p,d) -> (
-        let (ok, new_board) = apply (p, opposite d) board in
-        assert ok;
-        (p,d)::(generate_solution new_board)
-      )
-    in
-    let steps = ref 0 in
-    Queue.push start_board queue1;
-    Queue.push end_board queue2;
-    Hashtbl.add discovered start_board None;
-    Hashtbl.add discovered end_board None;
-
-    while not (Queue.is_empty queue1 || Queue.is_empty queue2) do
-      let current_board1 = Queue.pop queue1 in
-      if debug then (
-        Printf.printf "Step %d\n" !steps;
-        print_board current_board1
-      );
-
-      if Hashtbl.mem visited current_board1 then raise (Solution (List.rev (generate_solution current_board1)))
-      else if !steps < max_steps then (
-        Hashtbl.add visited current_board1 ();
-        incr steps;
-        if debug then print_string "--->Detecting neighbours...\n";
-
-        for d = 0 to number_directions - 1 do
-          let current_direction = directions.(d) in
-          for p = 0 to (number_pieces start_board) - 1 do
-            let current_piece = (pieces start_board).(p) in
-            let (ok, next_board) = apply (current_piece, current_direction) current_board1 in
-            if ok && not (Hashtbl.mem discovered next_board) then (
-              Hashtbl.add discovered next_board (Some (current_piece, current_direction));
-              Queue.push next_board queue1;
-            )
-          done;
-        done
-      );
-
-
-      let current_board2 = Queue.pop queue2 in
-      if debug then (
-        Printf.printf "Step %d\n" !steps;
-        print_board current_board2
-      );
-
-      if Hashtbl.mem visited current_board2 then raise (Solution (List.rev (generate_solution current_board2)))
-      else if !steps < max_steps then (
-        Hashtbl.add visited current_board2 ();
-        incr steps;
-        if debug then print_string "<---Detecting neighbours...\n";
-
-        for d = 0 to number_directions - 1 do
-          let current_direction = directions.(d) in
-          for p = 0 to (number_pieces start_board) - 1 do
-            let current_piece = (pieces start_board).(p) in
-            let (ok, next_board) = apply (current_piece, current_direction) current_board2 in
-            if ok && not (Hashtbl.mem discovered next_board) then (
-              Hashtbl.add discovered next_board (Some (current_piece, current_direction));
-              Queue.push next_board queue2;
-            )
-          done;
-        done
-      )
-    done;
-    failwith "No solution"
-
   let simple_latex l start_board = 
 ("\\documentclass[12pt]{article}
 \\usepackage{multicol}
@@ -530,7 +436,7 @@ end = struct
 
   let string_to_board (s : string) : board =
     let rec remove_last l = match l with
-      | [] -> failwith "Bizar"
+      | [] -> invalid_arg "empty_string"
       | t::[] -> []
       |t::q -> t::(remove_last q) in
     let l = String.split_on_char '\n' s in
