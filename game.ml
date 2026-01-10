@@ -1,20 +1,25 @@
-module Board : sig
-  type board
-  type move
-  type mode = Allpieces | OnlyX | Shape
-  exception Solution of move list
-  exception NoSolution
-  val solve : board -> board -> mode -> int -> unit
-  val string_to_board : string -> board
-  val print_board : board -> unit
-  val latex_solution : move list -> board -> string
-  val write_file : string -> string -> unit 
-  val simple_latex : move list -> board -> string
-end = struct 
+module Game :
+  sig
+    type board
+    type move
+    type mode = Allpieces | OnlyX | Shape
+    exception Solution of move list
+    exception NoSolution
+    exception Value of int
+    val solve : board -> board -> mode -> int -> unit
+    val string_to_board : string -> board
+    val print_board : board -> unit
+    val latex_solution : move list -> board -> string
+    val write_file : string -> string -> unit 
+    val simple_latex : move list -> board -> string
+    val cb : board -> board 
+  end 
+= struct 
   exception Invalid_move
   exception Timeout
   exception Terminate
   exception NoSolution
+  exception Value of int
 
   let debug = false;;
   let unit_test = false;;
@@ -56,7 +61,7 @@ end = struct
   (** Number of types of pieces *)
   let number_pieces board = Array.length (pieces board)
 
-  (** verifys for obvious absence of solution*)
+  (** check obvious absence of solution*)
   (*TODO: better version*)
   let basic_check b1 b2 =
     if pieces b1 <> pieces b2 then raise NoSolution
@@ -369,13 +374,57 @@ end = struct
     | W -> E
     | S -> N
 
+  let symetrical (board : board) : board = 
+    let size = (Array.length board,Array.length board.(0)) in
+    let a = Array.make (fst size) [||] in 
+    for x=0 to (fst size)-1 do
+      let b = Array.make (snd size) ' ' in 
+      for y=0 to (snd size)-1 do
+        b.(y) <- board.(x).((snd size)-1 - y)
+      done;
+      a.(x) <- b
+    done;
+    a
+
+  (** TODO (doesn't work) *)
+  let is_symatrical (b : board) : bool = 
+    b = symetrical b
+    
+  let () = 
+    assert(not(is_symatrical [|[|'A' ; 'B'|]|]));
+    assert(    is_symatrical [|[|'A' ; 'A'|]|]);
+    assert(not(is_symatrical [|[|'A' ; 'B' ; 'A'|] ; [|'C' ; 'B' ; 'A'|]|]));
+    assert(not(is_symatrical [|[|'A' ; 'B' ; 'C'|] ; [|'A' ; 'B' ; 'C'|]|]));
+    assert(    is_symatrical [|[|'A' ; 'B' ; 'A'|] ; [|'C' ; 'B' ; 'C'|]|])
+
+  (** Choses a "canonical" board between the one provided and its symetrical *)
+  let cb (b : board) : board = 
+    let s = symetrical b in 
+
+    let size = (Array.length b,Array.length b.(0)) in
+    try(
+    for x=0 to (fst size)-1 do
+      for y=0 to (snd size)-1 do
+        if s.(x).(y) <> b.(x).(y) then
+          raise (Value (compare (b.(x).(y)) (s.(x).(y))))
+        else ()
+      done;
+    done;
+    b
+    ) with Value x -> if x<0 then b else s 
+  
+  let () = 
+    assert (cb ([|[|'A' ; 'B' ; 'A'|] ; [|'C' ; 'B' ; 'C'|]|]) = 
+    cb ( cb ([|[|'A' ; 'B' ; 'A'|] ; [|'C' ; 'B' ; 'C'|]|]) ))
+
+
   let solve (start_board : board) (end_board : board) (mode: mode) (max_steps : int) : unit =
     (* basic_check start_board end_board; *)
     let discovered = Hashtbl.create max_steps in
     let queue = Queue.create () in
     let rec generate_solution board =
-      assert (Hashtbl.mem discovered board);
-      let optm = Hashtbl.find discovered board in
+      assert (Hashtbl.mem discovered (cb board));
+      let optm = Hashtbl.find discovered (cb board) in
       match optm with
       | None -> []
       | Some (p,d) -> (
@@ -410,8 +459,8 @@ end = struct
             for d = 0 to number_directions - 1 do
               let current_direction = directions.(d) in
               let (ok, next_board) = apply (current_piece, current_direction) current_board in
-              if ok && not (Hashtbl.mem discovered next_board) then (
-                Hashtbl.add discovered next_board (Some (current_piece, current_direction));
+              if ok && not (Hashtbl.mem discovered (cb next_board)) then (
+                Hashtbl.add discovered (cb next_board) (Some (current_piece, current_direction));
                 Queue.push next_board queue;
               )
           done;

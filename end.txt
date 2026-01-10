@@ -2,5 +2,5 @@ AABB
 A__B
 C__D
 CCDD
- XX 
- XX 
+_XX_
+_XX_
