@@ -1,6 +1,5 @@
-AABB
 AXXB
-CXXD
-CCDD
-____
-____
+AXXB
+_CC_
+DEFG
+DHIG

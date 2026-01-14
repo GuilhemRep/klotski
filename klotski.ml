@@ -16,13 +16,14 @@ let () =
     let end_board = Game.string_to_board content2 in
     Game.print_board start_board ;
     Game.print_board end_board ;
-    let max_steps = 1000000000 in
+    let max_steps = 10 in
 
     let mode = match int_of_string (Sys.argv.(3)) with
       | 0 -> Game.Allpieces
       | 1 -> Game.OnlyX
       | _ -> Game.Shape
     in
+
 
     try (Game.solve start_board end_board mode max_steps)
     with Game.Solution l -> (

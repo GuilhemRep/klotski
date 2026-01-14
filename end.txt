@@ -1,6 +1,5 @@
-AABB
 A__B
-C__D
-CCDD
-_XX_
-_XX_
+A__B
+_CC_
+DXXG
+DXXG
