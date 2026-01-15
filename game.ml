@@ -41,11 +41,11 @@ module Game :
   (** An array with each type of piece only once, in the order of appearance *)
   let pieces board =
     let size = (Array.length board,Array.length board.(0)) in
-    let rec aux l p = match l with
-      | _ when (p==' ' || p=='_' || p=='.')  -> l
+    let rec aux_fun l p = match l with
+        _ when (p==' ' || p=='_' || p=='.')  -> l
       | []-> [p]
       | t::q when t==p -> l
-      | t::q -> t::(aux q p) in
+      | t::q -> t::(aux_fun q p) in
     let l = ref [] in
     for x=0 to (fst size)-1 do 
       for y=0 to (snd size)-1 do 
@@ -53,9 +53,14 @@ module Game :
       done;
     done;
     l := List.rev (!l);
-    let a = (Array.of_list (List.fold_left aux [] (!l))) in
+    let a = (Array.of_list (List.fold_left aux_fun [] (!l))) in
     (* Array.fast_sort compare a; *)
     a
+  
+  let () =
+    assert (pieces [|[|'A';'B';'C'|];[|'A';'B';'C'|];[|'A';'B';'C'|]|] = [|'A';'B';'C'|]);
+    assert (pieces [|[|'C';'C';'C'|];[|'A';'B';'C'|];[|'A';'B';'C'|]|] = [|'C';'A';'B'|]);
+    assert (pieces [|[|'C';'B';'C'|];[|'X';'B';'C'|];[|'A';'B';'C'|]|] = [|'C';'B';'X';'A'|])
 
   (** Number of types of pieces *)
   let number_pieces board = Array.length (pieces board)
@@ -75,7 +80,7 @@ module Game :
     done;
     a
 
-  (** Two modes depending on the goal of the puzzle *)
+  (** Modes depending on the goal of the puzzle *)
   let is_equal (b1:board) (b2:board) mode = 
     let size1 = (Array.length b1,Array.length b1.(0)) in
     let size2 = (Array.length b2,Array.length b2.(0)) in
@@ -138,33 +143,46 @@ module Game :
     is_equal board end_board mode
 
   let canonical (b : board) : board = 
-    let b_ =  copy b in 
-    let p = pieces b in 
-    let dict = Hashtbl.create (4+number_pieces b) in 
-    Array.iteri (fun i x -> match x with
-      |'X' -> Hashtbl.add dict x x 
-      | _  -> Hashtbl.add dict (p.(i)) (Char.chr (65+i)) ) p ;
+    let copy_b =  copy b in 
+    let pieces_b = pieces b in 
+    let dict = Hashtbl.create (number_pieces b) in 
+    let count_piece = ref 0 in
+    for i=0 to number_pieces b - 1 do 
+      let current_piece = pieces_b.(i) in 
+      if current_piece = 'X' then Hashtbl.add dict 'X' 'X'
+      else (
+        Hashtbl.add dict current_piece (Char.chr (65 + !count_piece)) ; 
+        incr count_piece
+        )
+    done;
+ 
     let size = (Array.length b,Array.length b.(0)) in 
     for i = 0 to (fst size - 1) do 
-        for j = 0 to (snd size - 1) do 
-          let y = Hashtbl.find_opt dict (b.(i).(j)) in match y with
-          | None -> b_.(i).(j) <- '_' 
-          | Some a -> b_.(i).(j) <- a
-        done;
+      for j = 0 to (snd size - 1) do 
+        let y = Hashtbl.find_opt dict (b.(i).(j)) in match y with
+        | None -> ( assert ( b.(i).(j) = ' ' || b.(i).(j) = '_' || b.(i).(j) = '.' );
+                    copy_b.(i).(j) <- ' ') 
+        | Some a -> copy_b.(i).(j) <- a
       done;
-    b_
+    done;
+    copy_b
 
   let () =
       assert (canonical [|[|'A' ; 'B' |] ; [|'C' ; 'Z'|]|] = [|[|'A' ; 'B' |] ; [|'C' ; 'D'|]|]) ;
       assert (canonical [|[|'C' ; 'C' |] ; [|'B' ; 'D'|]|] = [|[|'A' ; 'A' |] ; [|'B' ; 'C'|]|]) ;
-      assert (canonical [|[|'C' ; ' ' |] ; [|'B' ; 'X'|]|] = [|[|'A' ; '_' |] ; [|'B' ; 'X'|]|]) ;
-      assert (canonical [|[|'C' ; ' ' |] ; [|'B' ; 'X'|]|] = canonical ( canonical[|[|'C' ; '_' |] ; [|'B' ; 'X'|]|]))
+      assert (canonical [|[|'C' ; '_' |] ; [|'B' ; 'X'|]|] = [|[|'A' ; ' ' |] ; [|'B' ; 'X'|]|]) ;
+      assert (canonical [|[|'C' ; ' ' |] ; [|'B' ; 'X'|]|] = canonical ( canonical[|[|'C' ; '_' |] ; [|'B' ; 'X'|]|])) ;
+      assert (canonical [|[|'A';'B';'C'|];[|'A';'B';'C'|];[|'A';'B';'W'|]|]
+      = [|[|'A';'B';'C'|];[|'A';'B';'C'|];[|'A';'B';'D'|]|]) ;
+      assert (canonical [|[|'D';'B';'C'|];[|'A';'B';'C'|];[|'A';'B';'W'|]|]
+      = [|[|'A';'B';'C'|];[|'D';'B';'C'|];[|'D';'B';'E'|]|]) ;
+      assert (canonical [|[|'C';'B';'A'|];[|'C';'B';'A'|];[|'C';'B';'A'|]|]
+      = [|[|'A';'B';'C'|];[|'A';'B';'C'|];[|'A';'B';'C'|]|])
 
   let () =
     let b = [|[|'C' ; 'C' |] ; [|'B' ; 'D'|]|] in 
     assert (is_similar b (canonical b))
 
-  let canonical b = b
 
   (** Terminal format *)
   let print_board (board:board) : unit =
@@ -312,11 +330,10 @@ module Game :
     assert(not(is_symetrical [|[|'A' ; 'B' ; 'C'|] ; [|'A' ; 'B' ; 'C'|]|]));
     assert(    is_symetrical [|[|'A' ; 'B' ; 'A'|] ; [|'C' ; 'B' ; 'C'|]|])
 
-  let solve (start_board_ : board) (end_board_ : board) (mode: mode) (max_steps : int) : unit =
-    let start_board = canonical start_board_
-      and end_board = canonical end_board_ in
+  let solve (start_board : board) (end_board : board) (mode: mode) (max_steps : int) : unit =
     (* basic_check start_board end_board; *)
     let discovered = Hashtbl.create (max_steps/100) in
+    let deja_vu = Hashtbl.create (max_steps/100) in
     let queue = Queue.create () in
     let rec generate_solution board =
       assert (Hashtbl.mem discovered board);
@@ -332,6 +349,7 @@ module Game :
     let steps = ref 0 in
     Queue.push start_board queue;
     Hashtbl.add discovered start_board None;
+    Hashtbl.add deja_vu (canonical start_board) ();
 
     while not (Queue.is_empty queue) do
       let current_board = Queue.pop queue in
@@ -341,14 +359,12 @@ module Game :
         print_board current_board
       );
 
-      if is_finished current_board end_board mode then (
-        let l = (List.rev (generate_solution current_board)) in
-        (* if debug then print_string (latex_solution l start_board); *)
-        raise (Solution l)
-      )
-      else if !steps < max_steps then (
+      (* if Hashtbl.mem deja_vu (canonical end_board) then ( *)
+      
+      
+      if !steps < max_steps then (
         incr steps;
-        if debug then print_string "Detecting neighbours... ";
+        if debug then print_string "Finding neighbours... ";
         let number_neighbours = ref 0 in
         let number_pieces = number_pieces start_board in
         let the_pieces = pieces start_board in 
@@ -356,19 +372,30 @@ module Game :
           let current_piece = the_pieces.(p) in
             for d = 0 to number_directions - 1 do
               let current_direction = directions.(d) in
-              let (ok, next_board_) = apply (current_piece, current_direction) current_board in
-              let next_board = canonical next_board_ in
-              if ok && not (Hashtbl.mem discovered next_board)
-                && not (Hashtbl.mem discovered (canonical (symetrical next_board))) then (
-                Hashtbl.add discovered next_board (Some (current_piece, current_direction));
-                Queue.push next_board queue;
-                incr number_neighbours;
-              );
+              let (ok, next_board) = apply (current_piece, current_direction) current_board in
+              if ok then 
+                if   Hashtbl.mem deja_vu (canonical next_board)
+                  || Hashtbl.mem deja_vu (canonical (symetrical next_board)) then ()
+                else (
+                  Hashtbl.add discovered next_board (Some (current_piece, current_direction));
+                  if is_finished next_board end_board mode then (
+                    let l = generate_solution next_board in
+                    (* if debug then print_string (latex_solution l start_board); *)
+                    raise (Solution (List.rev l))
+                  ) else (
+                    Hashtbl.add deja_vu (canonical next_board) ();
+                    Queue.push next_board queue;
+                    incr number_neighbours
+                  )
+
+
+                )
           done;
         done;
         if debug then print_int (!number_neighbours);
         if debug then print_string "\n";
-      ) else (failwith "No solution")
+      )
+      else failwith "No solution found..."
     done;
     failwith "No solution"
 
