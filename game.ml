@@ -20,7 +20,7 @@ module Game :
   exception NoSolution
   exception Value of int
 
-  let debug = true;;
+  let debug = false;;
 
   type piece = char
 
@@ -101,30 +101,6 @@ module Game :
       true
     ) with Terminate -> false
 
-  let is_similar (b1 : board) (b2 : board) : bool = 
-    let size1 = (Array.length b1,Array.length b1.(0)) in
-    let size2 = (Array.length b2,Array.length b2.(0)) in
-    if size1<>size2 then false
-    else
-    let aux b1 b2 = 
-      let dict = Hashtbl.create (number_pieces b1) in
-      for i = 0 to (fst size1 - 1) do 
-        for j = 0 to (snd size1 - 1) do 
-          match Hashtbl.find_opt dict (b1.(i).(j)) with
-          | Some x -> if x<>(b2.(i).(j)) then raise Terminate else ()
-          | None -> Hashtbl.add dict (b1.(i).(j)) (b2.(i).(j))
-        done;
-      done in 
-      try (
-        aux b1 b2 ;
-        aux b2 b1 ;
-        true
-      ) with _ -> false
-
-  let () =
-    assert (is_similar [|[|'A' ; 'B' ; 'A'|] ; [|'C' ; 'B' ; 'A'|]|] [|[|'A' ; 'B' ; 'A'|] ; [|'C' ; 'B' ; 'A'|]|]);
-    assert (is_similar [|[|'A' ; 'B' ; 'A'|] ; [|'C' ; 'B' ; 'A'|]|] [|[|'Z' ; 'B' ; 'Z'|] ; [|'C' ; 'B' ; 'Z'|]|])
-
   (** copy [board] outputs a fresh board copied from [board]*)
   let copy (board:board) : board = 
     let size = (Array.length board,Array.length board.(0)) in
@@ -142,6 +118,8 @@ module Game :
   let is_finished board end_board mode =
     is_equal board end_board mode
 
+  (** Renames the pieces of a board [b] such that the result would be the same for
+  any board obtained by renaming pieces of [b]  *)
   let canonical (b : board) : board = 
     let copy_b =  copy b in 
     let pieces_b = pieces b in 
@@ -179,12 +157,7 @@ module Game :
       assert (canonical [|[|'C';'B';'A'|];[|'C';'B';'A'|];[|'C';'B';'A'|]|]
       = [|[|'A';'B';'C'|];[|'A';'B';'C'|];[|'A';'B';'C'|]|])
 
-  let () =
-    let b = [|[|'C' ; 'C' |] ; [|'B' ; 'D'|]|] in 
-    assert (is_similar b (canonical b))
-
-
-  (** Terminal format *)
+  (** Terminal readable format *)
   let print_board (board:board) : unit =
     let size = (Array.length board,Array.length board.(0)) in
     print_string " ";
@@ -299,15 +272,15 @@ module Game :
       else
         verify q b b2 mode
     )
-
   
-
+  (** North is opposite of south and so on *)
   let opposite m = match m with
     | N -> S
     | E -> W
     | W -> E
     | S -> N
 
+  (** Vertical symetry of the board *)
   let symetrical (board : board) : board = 
     let size = (Array.length board,Array.length board.(0)) in
     let a = Array.make (fst size) [||] in 
@@ -320,22 +293,12 @@ module Game :
     done;
     a
 
-  (** TODO (doesn't work) *)
-  let is_symetrical (b : board) : bool = b = symetrical b
-    
-  let () = 
-    assert(not(is_symetrical [|[|'A' ; 'B'|]|]));
-    assert(    is_symetrical [|[|'A' ; 'A'|]|]);
-    assert(not(is_symetrical [|[|'A' ; 'B' ; 'A'|] ; [|'C' ; 'B' ; 'A'|]|]));
-    assert(not(is_symetrical [|[|'A' ; 'B' ; 'C'|] ; [|'A' ; 'B' ; 'C'|]|]));
-    assert(    is_symetrical [|[|'A' ; 'B' ; 'A'|] ; [|'C' ; 'B' ; 'C'|]|])
-
   let solve (start_board : board) (end_board : board) (mode: mode) (max_steps : int) : unit =
-    (* basic_check start_board end_board; *)
-    let discovered = Hashtbl.create (max_steps/100) in
-    let deja_vu = Hashtbl.create (max_steps/100) in
+    basic_check start_board end_board;
+    let discovered = Hashtbl.create max_steps in
+    let deja_vu = Hashtbl.create max_steps in
     let queue = Queue.create () in
-    let rec generate_solution board =
+    let rec unfold_solution board =
       assert (Hashtbl.mem discovered board);
       let optm = Hashtbl.find discovered board in
       match optm with
@@ -343,10 +306,13 @@ module Game :
       | Some (p,d) -> (
         let (ok, new_board) = apply (p, opposite d) board in
         assert ok;
-        (p,d)::(generate_solution new_board)
+        (p,d)::(unfold_solution new_board)
       )
     in
     let steps = ref 0 in
+    let number_pieces = number_pieces start_board in
+    let the_pieces = pieces start_board in 
+    
     Queue.push start_board queue;
     Hashtbl.add discovered start_board None;
     Hashtbl.add deja_vu (canonical start_board) ();
@@ -359,36 +325,28 @@ module Game :
         print_board current_board
       );
 
-      (* if Hashtbl.mem deja_vu (canonical end_board) then ( *)
-      
-      
       if !steps < max_steps then (
         incr steps;
         if debug then print_string "Finding neighbours... ";
         let number_neighbours = ref 0 in
-        let number_pieces = number_pieces start_board in
-        let the_pieces = pieces start_board in 
         for p = 0 to number_pieces - 1 do
           let current_piece = the_pieces.(p) in
             for d = 0 to number_directions - 1 do
               let current_direction = directions.(d) in
-              let (ok, next_board) = apply (current_piece, current_direction) current_board in
+              let (ok, next_candidate) = apply (current_piece, current_direction) current_board in
               if ok then 
-                if   Hashtbl.mem deja_vu (canonical next_board)
-                  || Hashtbl.mem deja_vu (canonical (symetrical next_board)) then ()
+                if Hashtbl.mem deja_vu (canonical next_candidate) || Hashtbl.mem deja_vu (canonical (symetrical next_candidate))
+                  then ()
                 else (
-                  Hashtbl.add discovered next_board (Some (current_piece, current_direction));
-                  if is_finished next_board end_board mode then (
-                    let l = generate_solution next_board in
-                    (* if debug then print_string (latex_solution l start_board); *)
+                  Hashtbl.add discovered next_candidate (Some (current_piece, current_direction));
+                  if is_finished next_candidate end_board mode then (
+                    let l = unfold_solution next_candidate in
                     raise (Solution (List.rev l))
                   ) else (
-                    Hashtbl.add deja_vu (canonical next_board) ();
-                    Queue.push next_board queue;
+                    Hashtbl.add deja_vu (canonical next_candidate) ();
+                    Queue.push next_candidate queue;
                     incr number_neighbours
                   )
-
-
                 )
           done;
         done;
@@ -399,6 +357,8 @@ module Game :
     done;
     failwith "No solution"
 
+
+(* ------- LaTeX part ------- *)
 
   let cell_size () = 0.6
 
@@ -537,7 +497,7 @@ module Game :
     let number_per_line = Float.to_int (page_width /. size_figure) in
     aux l b1 number_per_line 1
 
-    let simple_latex l start_board = 
+  let simple_latex l start_board = 
   ("\\documentclass[12pt]{article}
   \\usepackage{multicol}
   \\setlength{\\parindent}{0cm}
