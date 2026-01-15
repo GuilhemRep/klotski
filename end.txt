@@ -1,6 +1,5 @@
-AABB
-A__B
-C__D
-CCDD
- XX 
- XX 
+____
+____
+____
+_XX_
+_XX_

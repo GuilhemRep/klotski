@@ -1,0 +1,6 @@
+AABB
+A__B
+D__C
+DDCC
+_XX_
+_XX_
