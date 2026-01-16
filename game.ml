@@ -5,7 +5,6 @@ module Game :
     type mode = Allpieces | OnlyX | Shape
     exception Solution of move list
     exception NoSolution
-    exception Value of int
     val solve : board -> board -> mode -> int -> unit
     val string_to_board : string -> board
     val print_board : board -> unit
@@ -14,12 +13,6 @@ module Game :
     val simple_latex : move list -> board -> string
   end 
 = struct 
-  exception Invalid_move
-  exception Timeout
-  exception Terminate
-  exception NoSolution
-  exception Value of int
-
   let debug = false;;
 
   type piece = char
@@ -31,7 +24,12 @@ module Game :
   type board = piece array array
   type move = piece * direction
 
+  exception Invalid_move
+  exception Timeout
+  exception Terminate
+  exception NoSolution
   exception Solution of move list
+
 
   (** Allpieces if all the pieces in the solution must be at their place,
     OnlyX if only the position of the piece X matters.
@@ -138,8 +136,11 @@ module Game :
     for i = 0 to (fst size - 1) do 
       for j = 0 to (snd size - 1) do 
         let y = Hashtbl.find_opt dict (b.(i).(j)) in match y with
-        | None -> ( assert ( b.(i).(j) = ' ' || b.(i).(j) = '_' || b.(i).(j) = '.' );
-                    copy_b.(i).(j) <- ' ') 
+        | None -> (
+          if b.(i).(j) = ' ' || b.(i).(j) = '_' then copy_b.(i).(j) <- ' '
+          else if b.(i).(j) = '.' then copy_b.(i).(j) <- '.'
+          else failwith "Unknown character in board"
+        )
         | Some a -> copy_b.(i).(j) <- a
       done;
     done;
@@ -316,6 +317,11 @@ module Game :
     Queue.push start_board queue;
     Hashtbl.add discovered start_board None;
     Hashtbl.add deja_vu (canonical start_board) ();
+
+    if is_finished start_board end_board mode then (
+      let l = unfold_solution start_board in
+      raise (Solution (List.rev l))
+    );
 
     while not (Queue.is_empty queue) do
       let current_board = Queue.pop queue in
