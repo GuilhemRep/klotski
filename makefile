@@ -1,6 +1,12 @@
-all: game.cmo
-	ocamlc -c klotski.ml -g
+all: game.cmo klotski.cmo
 	ocamlc -o klotski game.cmo klotski.cmo -g
+
+game.cmo: game.ml 
+	ocamlc -c game.ml -g
+	
+klotski.cmo: klotski.ml
+	ocamlc -c klotski.ml -g
+
 
 # all:
 # 	ocamlopt -c game.ml
@@ -10,16 +16,6 @@ all: game.cmo
 
 # -g for debug, then OCAMLRUNPARAM=b ./klotski start.txt end.txt 0
 
-
-# _A_A_
-# AAAAA    
-# AAAAA
-# _AAA_
-# __A__
-
-
-game.cmo:
-	ocamlc -c game.ml -g
 
 clean:
 	rm -rf klotski *.cmi *.cmx *.o *.cmo *~ sol.tex sol.aux sol.log sol.pdf
