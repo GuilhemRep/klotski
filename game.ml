@@ -40,7 +40,7 @@ module Game :
   let pieces board =
     let size = (Array.length board,Array.length board.(0)) in
     let rec aux_fun l p = match l with
-        _ when (p==' ' || p=='_' || p=='.')  -> l
+        _ when (p=='_' || p=='.')  -> l
       | []-> [p]
       | t::q when t==p -> l
       | t::q -> t::(aux_fun q p) in
@@ -66,6 +66,9 @@ module Game :
   (** check obvious absence of solution*)
   (*TODO: better version*)
   let basic_check b1 b2 =
+    let size1 = (Array.length b1,Array.length b1.(0)) in
+    let size2 = (Array.length b2,Array.length b2.(0)) in
+    if size1<>size2 then raise NoSolution;
     if Array.fast_sort compare (pieces b1) <> Array.fast_sort compare (pieces b2)
       then raise NoSolution
 
@@ -73,26 +76,21 @@ module Game :
   let new_board (size) : board = 
     let a = Array.make (fst size) [||] in 
     for i=0 to (fst size)-1 do
-      let b = Array.make (snd size) ' ' in 
+      let b = Array.make (snd size) '_' in 
       a.(i) <- b
     done;
     a
 
   (** Modes depending on the goal of the puzzle *)
   let is_equal (b1:board) (b2:board) mode = 
-    let size1 = (Array.length b1,Array.length b1.(0)) in
-    let size2 = (Array.length b2,Array.length b2.(0)) in
-    if size1<>size2 then false
-    else 
+    let size = (Array.length b1,Array.length b1.(0)) in
     try (
-      for x=0 to (fst size1)-1 do
-        for y=0 to (snd size1)-1 do 
+      for x=0 to (fst size)-1 do
+        for y=0 to (snd size)-1 do 
           match mode with
             | Allpieces -> if b1.(x).(y) <> b2.(x).(y) then raise Terminate
             | OnlyX     -> if (b1.(x).(y) == 'X' && b2.(x).(y) <> 'X') then raise Terminate
-            | Shape     -> if  (b1.(x).(y) == ' ' && b2.(x).(y) <> ' ')
-                            || (b1.(x).(y) == '_' && b2.(x).(y) <> '_')
-                            || (b2.(x).(y) == ' ' && b1.(x).(y) <> ' ')
+            | Shape     -> if  (b1.(x).(y) == '_' && b2.(x).(y) <> '_')
                             || (b2.(x).(y) == '_' && b1.(x).(y) <> '_') then raise Terminate 
         done;
       done;
@@ -104,7 +102,7 @@ module Game :
     let size = (Array.length board,Array.length board.(0)) in
     let a = Array.make (fst size) [||] in 
     for x=0 to (fst size)-1 do
-      let b = Array.make (snd size) ' ' in 
+      let b = Array.make (snd size) '_' in 
       for y=0 to (snd size)-1 do
         b.(y) <- board.(x).(y)
       done;
@@ -137,7 +135,7 @@ module Game :
       for j = 0 to (snd size - 1) do 
         let y = Hashtbl.find_opt dict (b.(i).(j)) in match y with
         | None -> (
-          if b.(i).(j) = ' ' || b.(i).(j) = '_' then copy_b.(i).(j) <- ' '
+          if b.(i).(j) = '_' then copy_b.(i).(j) <- '_'
           else if b.(i).(j) = '.' then copy_b.(i).(j) <- '.'
           else failwith "Unknown character in board"
         )
@@ -149,8 +147,8 @@ module Game :
   let () =
       assert (canonical [|[|'A' ; 'B' |] ; [|'C' ; 'Z'|]|] = [|[|'A' ; 'B' |] ; [|'C' ; 'D'|]|]) ;
       assert (canonical [|[|'C' ; 'C' |] ; [|'B' ; 'D'|]|] = [|[|'A' ; 'A' |] ; [|'B' ; 'C'|]|]) ;
-      assert (canonical [|[|'C' ; '_' |] ; [|'B' ; 'X'|]|] = [|[|'A' ; ' ' |] ; [|'B' ; 'X'|]|]) ;
-      assert (canonical [|[|'C' ; ' ' |] ; [|'B' ; 'X'|]|] = canonical ( canonical[|[|'C' ; '_' |] ; [|'B' ; 'X'|]|])) ;
+      assert (canonical [|[|'C' ; '_' |] ; [|'B' ; 'X'|]|] = [|[|'A' ; '_' |] ; [|'B' ; 'X'|]|]) ;
+      assert (canonical [|[|'C' ; '_' |] ; [|'B' ; 'X'|]|] = canonical ( canonical[|[|'C' ; '_' |] ; [|'B' ; 'X'|]|])) ;
       assert (canonical [|[|'A';'B';'C'|];[|'A';'B';'C'|];[|'A';'B';'W'|]|]
       = [|[|'A';'B';'C'|];[|'A';'B';'C'|];[|'A';'B';'D'|]|]) ;
       assert (canonical [|[|'D';'B';'C'|];[|'A';'B';'C'|];[|'A';'B';'W'|]|]
@@ -213,9 +211,9 @@ module Game :
             for y=0 to (snd size)-1 do
               if board.(x).(y) == p then (
           if x==0 then raise Invalid_move
-          else if not (board.(x-1).(y) == p || board.(x-1).(y) == ' ') then raise Invalid_move;
+          else if not (board.(x-1).(y) == p || board.(x-1).(y) == '_') then raise Invalid_move;
           new_board.(x-1).(y) <- p;
-          new_board.(x).(y) <- ' '
+          new_board.(x).(y) <- '_'
               )
         done;
       done;
@@ -226,9 +224,9 @@ module Game :
           for y=(snd size)-1 downto 0 do
             if board.(x).(y) == p then (
           if x==(fst size)-1 then raise Invalid_move
-          else if not (board.(x+1).(y) == p || board.(x+1).(y) == ' ') then raise Invalid_move;
+          else if not (board.(x+1).(y) == p || board.(x+1).(y) == '_') then raise Invalid_move;
           new_board.(x+1).(y) <- p; 
-          new_board.(x).(y) <- ' '
+          new_board.(x).(y) <- '_'
             )
         done;
       done;
@@ -239,9 +237,9 @@ module Game :
           for y=(snd size)-1 downto 0 do
             if board.(x).(y) == p then (
           if y==(snd size)-1 then raise Invalid_move
-          else if not (board.(x).(y+1) == p || board.(x).(y+1) == ' ') then raise Invalid_move;
+          else if not (board.(x).(y+1) == p || board.(x).(y+1) == '_') then raise Invalid_move;
           new_board.(x).(y+1) <- p;
-          new_board.(x).(y) <- ' '
+          new_board.(x).(y) <- '_'
             )
         done;
       done;
@@ -252,9 +250,9 @@ module Game :
           for y=0 to (snd size)-1 do
             if board.(x).(y) == p then (
           if y==0 then raise Invalid_move
-          else if not (board.(x).(y-1) == p || board.(x).(y-1) == ' ') then raise Invalid_move;
+          else if not (board.(x).(y-1) == p || board.(x).(y-1) == '_') then raise Invalid_move;
           new_board.(x).(y-1) <- p;
-          new_board.(x).(y) <- ' '
+          new_board.(x).(y) <- '_'
             )
         done;
       done;
@@ -286,7 +284,7 @@ module Game :
     let size = (Array.length board,Array.length board.(0)) in
     let a = Array.make (fst size) [||] in 
     for x=0 to (fst size)-1 do
-      let b = Array.make (snd size) ' ' in 
+      let b = Array.make (snd size) '_' in 
       for y=0 to (snd size)-1 do
         b.(y) <- board.(x).((snd size)-1 - y)
       done;
@@ -527,7 +525,7 @@ module Game :
     let board = Array.of_list (List.map (fun line -> Array.of_list (List.init (String.length line) (String.get line))) lines) in
     for i=0 to (Array.length board -1) do
       for j=0 to (Array.length board.(0) -1) do
-        if board.(i).(j) == '_' then board.(i).(j) <- ' '
+        if board.(i).(j) == '_' then board.(i).(j) <- '_'
       done;
     done;
     board

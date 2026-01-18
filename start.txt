@@ -1,5 +1,5 @@
-AA BB
- I J 
-CC EF
-K   D
-KK DD
+AABCC
+A____
+D__EF
+J___G
+JJIIH

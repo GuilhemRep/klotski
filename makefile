@@ -10,6 +10,14 @@ all: game.cmo
 
 # -g for debug, then OCAMLRUNPARAM=b ./klotski start.txt end.txt 0
 
+
+# _A_A_
+# AAAAA    
+# AAAAA
+# _AAA_
+# __A__
+
+
 game.cmo:
 	ocamlc -c game.ml -g
 
