@@ -361,6 +361,12 @@ module Game :
     done;
     failwith "No solution"
 
+    let length_solution (start_board : board) (end_board : board) (mode: mode) (max_steps : int) : int = 
+      try (solve start_board end_board mode max_steps; -1) with
+        Solution l -> List.length l 
+      | NoSolution -> -1
+
+
 
 (* ------- LaTeX part ------- *)
 

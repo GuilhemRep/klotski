@@ -18,20 +18,20 @@ klotski.cmo: klotski.ml
 
 
 clean:
-	rm -rf klotski *.cmi *.cmx *.o *.cmo *~ sol.tex sol.aux sol.log sol.pdf
+	rm -rf klotski *.cmi *.cmx *.o *.cmo *~ *.tex *.aux *.log *.pdf
 
-run:
+classical:
 	./klotski start.txt end.txt 0
-	pdflatex sol.tex
+	pdflatex solution.tex
 	rm -rf *.aux *.log
 
 lab:
 	./klotski start.txt end.txt 1
-	pdflatex sol.tex
+	pdflatex solution.tex
 	rm -rf *.aux *.log
 
 shape:
 	./klotski start.txt end.txt 2
-	pdflatex sol.tex
+	pdflatex solution.tex
 	rm -rf *.aux *.log
 
