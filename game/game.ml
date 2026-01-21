@@ -11,7 +11,7 @@ module Game :
     val print_board : board -> unit
     val latex_solution : move list -> board -> string
     val write_file : string -> string -> unit 
-    val simple_latex : move list -> board -> string
+    val simple_latex : move list -> board -> board -> string
   end 
 = struct 
   let debug = false;;
@@ -511,24 +511,28 @@ module Game :
     | t::q -> (
       let (_, b) = apply t b1 in
       let tikz_code = generate_tikz b1 (Some t) in
-      tikz_code^(if c mod m == 0 then "\n" else "")^(aux q b m (c+1))
+      tikz_code^(aux q b m (c+1))
     ) in
     let cols = Array.length b1.(0) in
     let cell_size = cell_size () in 
     let size_figure = (Int.to_float cols) *. cell_size in
-    let page_width = 150. in
+    let page_width = 140. in
     let number_per_line = Float.to_int (page_width /. size_figure) in
     aux l b1 number_per_line 1
 
-  let simple_latex l start_board = 
+  let simple_latex l start_board end_board = 
   ("\\documentclass[12pt]{article}
   \\usepackage{multicol}
   \\setlength{\\parindent}{0cm}
   \\usepackage[a4paper,top=1cm,bottom=1cm,left=1cm,right=1cm]{geometry}
   \\usepackage{amsmath,tikz-cd}
-  \\begin{document}
-  \\begin{center}
-  \\end{center}"^(latex_solution l start_board)^"\\end{document}")
+  \\begin{document}\n\\begin{center}"^
+  (generate_tikz start_board None) ^
+  "\\raisebox{"^
+  Float.to_string (0.05 +. 0.25*.cell_size () *. (Int.to_float (Array.length start_board))) ^
+  "cm}{$\\longrightarrow$} \\hspace{0.45mm}"^
+  (generate_tikz end_board None) 
+  ^"\\end{center}\n\n"^(latex_solution l start_board)^"\n\\end{document}")
 
   let write_file (file:string) (s:string) =
     let oc = open_out file in
