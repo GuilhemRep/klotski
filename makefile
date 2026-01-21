@@ -1,11 +1,5 @@
-all: game.cmo klotski.cmo
-	ocamlc -o klotski game.cmo klotski.cmo -g
-
-game.cmo: game.ml 
-	ocamlc -c game.ml -g
-	
-klotski.cmo: klotski.ml
-	ocamlc -c klotski.ml -g
+all:
+	dune build
 
 
 # all:
@@ -18,20 +12,21 @@ klotski.cmo: klotski.ml
 
 
 clean:
-	rm -rf klotski *.cmi *.cmx *.o *.cmo *~ *.tex *.aux *.log *.pdf
+	dune clean
+	rm -rf *.cmi *.cmx *.o *.cmo *~ *.tex *.aux *.log *.pdf
 
-classical:
-	./klotski start.txt end.txt 0
+run:
+	./_build/default/klotski.exe start.txt end.txt 0
 	pdflatex solution.tex
 	rm -rf *.aux *.log
 
 lab:
-	./klotski start.txt end.txt 1
+	./_build/default/klotski.exe start.txt end.txt 1
 	pdflatex solution.tex
 	rm -rf *.aux *.log
 
 shape:
-	./klotski start.txt end.txt 2
+	./_build/default/klotski.exe start.txt end.txt 2
 	pdflatex solution.tex
 	rm -rf *.aux *.log
 

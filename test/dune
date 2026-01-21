@@ -1,0 +1,4 @@
+(test
+ (name test)
+ (libraries game)
+ (deps classical_start.txt classical_end.txt escape_start.txt escape_end.txt))

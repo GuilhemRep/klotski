@@ -5,6 +5,7 @@ module Game :
     type mode = Allpieces | OnlyX | Shape
     exception Solution of move list
     exception NoSolution
+    exception Timeout
     val solve : board -> board -> mode -> int -> unit
     val string_to_board : string -> board
     val print_board : board -> unit
@@ -25,9 +26,9 @@ module Game :
   type move = piece * direction
 
   exception Invalid_move
-  exception Timeout
   exception Terminate
   exception NoSolution
+  exception Timeout
   exception Solution of move list
 
 
@@ -42,7 +43,7 @@ module Game :
     let rec aux_fun l p = match l with
         _ when (p=='_' || p=='.')  -> l
       | []-> [p]
-      | t::q when t==p -> l
+      | t::_ when t==p -> l
       | t::q -> t::(aux_fun q p) in
     let l = ref [] in
     for x=0 to (fst size)-1 do 
@@ -54,11 +55,13 @@ module Game :
     let a = (Array.of_list (List.fold_left aux_fun [] (!l))) in
     (* Array.fast_sort compare a; *)
     a
-  
-  let () =
-    assert (pieces [|[|'A';'B';'C'|];[|'A';'B';'C'|];[|'A';'B';'C'|]|] = [|'A';'B';'C'|]);
-    assert (pieces [|[|'C';'C';'C'|];[|'A';'B';'C'|];[|'A';'B';'C'|]|] = [|'C';'A';'B'|]);
-    assert (pieces [|[|'C';'B';'C'|];[|'X';'B';'C'|];[|'A';'B';'C'|]|] = [|'C';'B';'X';'A'|])
+
+  let%test _ =
+    pieces [|[|'A';'B';'C'|];[|'A';'B';'C'|];[|'A';'B';'C'|]|] = [|'A';'B';'C'|]
+  let%test _ =
+    pieces [|[|'C';'C';'C'|];[|'A';'B';'C'|];[|'A';'B';'C'|]|] = [|'C';'A';'B'|]
+  let%test _ =
+    pieces [|[|'C';'B';'C'|];[|'X';'B';'C'|];[|'A';'B';'C'|]|] = [|'C';'B';'X';'A'|]
 
   (** Number of types of pieces *)
   let number_pieces board = Array.length (pieces board)
@@ -73,13 +76,13 @@ module Game :
       then raise NoSolution
 
   (** Creates a fresh new board *)
-  let new_board (size) : board = 
+  (* let new_board (size) : board = 
     let a = Array.make (fst size) [||] in 
     for i=0 to (fst size)-1 do
       let b = Array.make (snd size) '_' in 
       a.(i) <- b
     done;
-    a
+    a *)
 
   (** Modes depending on the goal of the puzzle *)
   let is_equal (b1:board) (b2:board) mode = 
@@ -144,23 +147,29 @@ module Game :
     done;
     copy_b
 
-  let () =
-      assert (canonical [|[|'A' ; 'B' |] ; [|'C' ; 'Z'|]|] = [|[|'A' ; 'B' |] ; [|'C' ; 'D'|]|]) ;
-      assert (canonical [|[|'C' ; 'C' |] ; [|'B' ; 'D'|]|] = [|[|'A' ; 'A' |] ; [|'B' ; 'C'|]|]) ;
-      assert (canonical [|[|'C' ; '_' |] ; [|'B' ; 'X'|]|] = [|[|'A' ; '_' |] ; [|'B' ; 'X'|]|]) ;
-      assert (canonical [|[|'C' ; '_' |] ; [|'B' ; 'X'|]|] = canonical ( canonical[|[|'C' ; '_' |] ; [|'B' ; 'X'|]|])) ;
-      assert (canonical [|[|'A';'B';'C'|];[|'A';'B';'C'|];[|'A';'B';'W'|]|]
-      = [|[|'A';'B';'C'|];[|'A';'B';'C'|];[|'A';'B';'D'|]|]) ;
-      assert (canonical [|[|'D';'B';'C'|];[|'A';'B';'C'|];[|'A';'B';'W'|]|]
-      = [|[|'A';'B';'C'|];[|'D';'B';'C'|];[|'D';'B';'E'|]|]) ;
-      assert (canonical [|[|'C';'B';'A'|];[|'C';'B';'A'|];[|'C';'B';'A'|]|]
-      = [|[|'A';'B';'C'|];[|'A';'B';'C'|];[|'A';'B';'C'|]|])
+  let%test _ =
+      canonical [|[|'A' ; 'B' |] ; [|'C' ; 'Z'|]|] = [|[|'A' ; 'B' |] ; [|'C' ; 'D'|]|]
+  let%test _ =
+      canonical [|[|'C' ; 'C' |] ; [|'B' ; 'D'|]|] = [|[|'A' ; 'A' |] ; [|'B' ; 'C'|]|]
+  let%test _ =
+      canonical [|[|'C' ; '_' |] ; [|'B' ; 'X'|]|] = [|[|'A' ; '_' |] ; [|'B' ; 'X'|]|]
+  let%test _ =
+      canonical [|[|'C' ; '_' |] ; [|'B' ; 'X'|]|] = canonical ( canonical[|[|'C' ; '_' |] ; [|'B' ; 'X'|]|])
+  let%test _ =
+      canonical [|[|'A';'B';'C'|];[|'A';'B';'C'|];[|'A';'B';'W'|]|]
+      = [|[|'A';'B';'C'|];[|'A';'B';'C'|];[|'A';'B';'D'|]|]
+  let%test _ =
+      canonical [|[|'D';'B';'C'|];[|'A';'B';'C'|];[|'A';'B';'W'|]|]
+      = [|[|'A';'B';'C'|];[|'D';'B';'C'|];[|'D';'B';'E'|]|]
+  let%test _ =
+      canonical [|[|'C';'B';'A'|];[|'C';'B';'A'|];[|'C';'B';'A'|]|]
+      = [|[|'A';'B';'C'|];[|'A';'B';'C'|];[|'A';'B';'C'|]|]
 
   (** Terminal readable format *)
   let print_board (board:board) : unit =
     let size = (Array.length board,Array.length board.(0)) in
     print_string " ";
-    for i=0 to (snd size)-1 do
+    for _=0 to (snd size)-1 do
       print_string "_";
     done;
     print_string "\n";
@@ -172,7 +181,7 @@ module Game :
       print_string "|\n";
     done;
     print_string " ";
-    for i=0 to (snd size)-1 do
+    for _=0 to (snd size)-1 do
       print_string "-";
     done;
     print_newline();print_newline()
@@ -262,7 +271,7 @@ module Game :
     ) with Invalid_move -> (false, new_board)
 
   (** verifies the solution: l(b1)=?b2 *)
-  let rec verify l b1 b2 mode = match l with
+  (* let rec verify l b1 b2 mode = match l with
     | [] -> is_equal b1 b2 mode
     | t::q -> (
       let (ok, b) = apply t b1 in
@@ -270,7 +279,7 @@ module Game :
         false
       else
         verify q b b2 mode
-    )
+    ) *)
   
   (** North is opposite of south and so on *)
   let opposite m = match m with
@@ -293,10 +302,15 @@ module Game :
     a
 
   let solve (start_board : board) (end_board : board) (mode: mode) (max_steps : int) : unit =
-    basic_check start_board end_board;
     let discovered = Hashtbl.create max_steps in
+    Hashtbl.add discovered start_board None;
+
     let deja_vu = Hashtbl.create max_steps in
+    Hashtbl.add deja_vu (canonical start_board) ();
+    
     let queue = Queue.create () in
+    Queue.push start_board queue;
+    
     let rec unfold_solution board =
       assert (Hashtbl.mem discovered board);
       let optm = Hashtbl.find discovered board in
@@ -308,18 +322,17 @@ module Game :
         (p,d)::(unfold_solution new_board)
       )
     in
-    let steps = ref 0 in
-    let number_pieces = number_pieces start_board in
-    let the_pieces = pieces start_board in 
-    
-    Queue.push start_board queue;
-    Hashtbl.add discovered start_board None;
-    Hashtbl.add deja_vu (canonical start_board) ();
 
+    basic_check start_board end_board;
     if is_finished start_board end_board mode then (
       let l = unfold_solution start_board in
       raise (Solution (List.rev l))
     );
+
+    let steps = ref 0 in
+    let number_pieces = number_pieces start_board in
+    let the_pieces = pieces start_board in 
+
 
     while not (Queue.is_empty queue) do
       let current_board = Queue.pop queue in
@@ -354,17 +367,17 @@ module Game :
                 )
           done;
         done;
-        if debug then print_int (!number_neighbours);
-        if debug then print_string "\n";
+        if debug then (print_int (!number_neighbours); print_string "\n");
       )
-      else failwith "No solution found..."
+      else raise Timeout
     done;
-    failwith "No solution"
+    raise NoSolution
+  (** Always raises an exception, Solution [l], NoSolution or Timeout*)
 
-    let length_solution (start_board : board) (end_board : board) (mode: mode) (max_steps : int) : int = 
+    (* let length_solution (start_board : board) (end_board : board) (mode: mode) (max_steps : int) : int = 
       try (solve start_board end_board mode max_steps; -1) with
         Solution l -> List.length l 
-      | NoSolution -> -1
+      | NoSolution -> -1 *)
 
 
 
@@ -496,7 +509,7 @@ module Game :
       tikz_code
     )
     | t::q -> (
-      let (ok, b) = apply t b1 in
+      let (_, b) = apply t b1 in
       let tikz_code = generate_tikz b1 (Some t) in
       tikz_code^(if c mod m == 0 then "\n" else "")^(aux q b m (c+1))
     ) in
@@ -524,7 +537,7 @@ module Game :
   let string_to_board (s : string) : board =
     let rec remove_last l = match l with
       | [] -> invalid_arg "empty_string"
-      | t::[] -> []
+      | _::[] -> []
       |t::q -> t::(remove_last q) in
     let l = String.split_on_char '\n' s in
     let lines = remove_last l in
