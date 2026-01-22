@@ -11,11 +11,16 @@ let () =
     let n = in_channel_length ic in
     let end_file = really_input_string ic n in
     close_in ic; 
+
+    let ic = open_in (Sys.argv.(3)) in
+    let n = in_channel_length ic in
+    let mode_int = really_input_string ic n in
+    close_in ic; 
     
     let start_board = Game.string_to_board start_file in
     let end_board = Game.string_to_board end_file in
 
-    let mode = match int_of_string (Sys.argv.(3)) with
+    let mode = match int_of_string mode_int with
       | 0 -> Game.Allpieces
       | 1 -> Game.OnlyX
       | _ -> Game.Shape

@@ -530,7 +530,8 @@ module Game :
 
   let write_file (file:string) (s:string) =
     let oc = open_out file in
-    Printf.fprintf oc "%s" s
+    Printf.fprintf oc "%s" s;
+    flush oc
 
   let string_to_board (s : string) : board =
     let rec remove_last l = match l with

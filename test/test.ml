@@ -13,7 +13,7 @@ let () =
     
     let start_board = Game.string_to_board content1 in
     let end_board = Game.string_to_board content2 in
-    let max_steps = 20000 in
+    let max_steps = 200000 in
 
     let mode = match int_of_string "1" with
       | 0 -> Game.Allpieces
