@@ -289,7 +289,7 @@ module Game :
     | S -> N
 
   (** Vertical symetry of the board *)
-  let symetrical (board : board) : board = 
+  (* let symetrical (board : board) : board = 
     let size = (Array.length board,Array.length board.(0)) in
     let a = Array.make (fst size) [||] in 
     for x=0 to (fst size)-1 do
@@ -299,7 +299,7 @@ module Game :
       done;
       a.(x) <- b
     done;
-    a
+    a *)
 
   let solve (start_board : board) (end_board : board) (mode: mode) (max_steps : int) : unit =
     let discovered = Hashtbl.create max_steps in
@@ -352,7 +352,8 @@ module Game :
               let current_direction = directions.(d) in
               let (ok, next_candidate) = apply (current_piece, current_direction) current_board in
               if ok then 
-                if Hashtbl.mem deja_vu (canonical next_candidate) || Hashtbl.mem deja_vu (canonical (symetrical next_candidate))
+                if Hashtbl.mem deja_vu (canonical next_candidate)
+                (* if Hashtbl.mem deja_vu (canonical next_candidate) || Hashtbl.mem deja_vu (canonical (symetrical next_candidate)) *)
                   then ()
                 else (
                   Hashtbl.add discovered next_candidate (Some (current_piece, current_direction));
@@ -534,8 +535,7 @@ module Game :
   let string_to_board (s : string) : board =
     let rec remove_last l = match l with
       | [] -> invalid_arg "empty_string"
-      | x::[] when x = "" -> []
-      | x::[]  -> x::[]
+      | _::[] -> []
       |t::q -> t::(remove_last q) in
     let l = String.split_on_char '\n' s in
     let lines = remove_last l in

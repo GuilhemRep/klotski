@@ -1,6 +1,5 @@
-AABB
-AXXB
-DXXC
-DDCC
+X___
+X___
+____
 ____
 ____
