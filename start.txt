@@ -1,5 +1,6 @@
-_CC._
-A__B_
-AAAB_
-D____
-.EF__
+AABB
+AXXB
+DXXC
+DDCC
+____
+____

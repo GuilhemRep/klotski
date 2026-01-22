@@ -33,3 +33,9 @@ tangram:
 	pdflatex solution.tex > /dev/null 2>&1
 	rm -rf *.aux *.log
 
+gui:
+	./_build/default/gui.exe
+	./_build/default/klotski.exe start.txt end.txt 0 solution.tex
+	pdflatex solution.tex > /dev/null 2>&1
+	rm -rf *.aux *.log
+	open solution.pdf

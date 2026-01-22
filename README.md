@@ -23,12 +23,14 @@ DHIE
 
 ```
 
-
 ## Modes 
 There are three modes: full, labyrinth and tangram.
 * The first, obtained with **make full** is for puzzles in which the first and last configuration are imposed.
 * The second, obtained with **make lab** is when only the piece labeled with **X** has a specified target position.
 * The third, obtained with **make tangram** tries to slide the pieces described in *start.txt* into all non-empty slots of *end.txt*. This mode is used for puzzles that focus on transforming shapes.
+
+## GUI (new!)
+Use **make gui** to design and solve a puzzle in graphical mode. (still unstable)
 
 ### Tests
 You can run multiple tests with **make test** or **dune runtest**, in particular to check that the algorithm finds a shortest solution for the examples provided in the example folders. 

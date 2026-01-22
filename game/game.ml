@@ -534,7 +534,8 @@ module Game :
   let string_to_board (s : string) : board =
     let rec remove_last l = match l with
       | [] -> invalid_arg "empty_string"
-      | _::[] -> []
+      | x::[] when x = "" -> []
+      | x::[]  -> x::[]
       |t::q -> t::(remove_last q) in
     let l = String.split_on_char '\n' s in
     let lines = remove_last l in

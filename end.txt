@@ -1,5 +1,6 @@
-A____
-AAAA_
-A____
-A___A
-_AAA_
+AABB
+A__B
+D__C
+DDCC
+_XX_
+_XX_
