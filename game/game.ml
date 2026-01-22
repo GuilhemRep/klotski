@@ -188,22 +188,22 @@ module Game :
 
   (** For the latex output *)
   let piece_to_color = function
-    | 'A' -> "red"
-    | 'B' -> "blue"
-    | 'C' -> "green"
+    | 'A' -> "brown"
+    | 'B' -> "violet"
+    | 'C' -> "teal"
     | 'D' -> "orange"
     | 'E' -> "cyan"
-    | 'F' -> "magenta"
+    | 'F' -> "red"
     | 'G' -> "yellow"
     | 'H' -> "olive"
-    | 'I' -> "teal"
-    | 'J' -> "violet"
-    | 'K' -> "lime"
-    | 'L' -> "pink"
+    | 'I' -> "pink"
+    | 'J' -> "blue"
+    | 'K' -> "purple"
+    | 'L' -> "green"
     | 'M' -> "teal"
-    | 'N' -> "purple"
-    | 'P' -> "brown"
-    | '.' -> "lightgray"
+    | 'N' -> "lime"
+    | 'P' -> "magenta"
+    | '.' -> "black"
     | 'X' -> "darkgray"
     | _ -> "white"
 
@@ -373,13 +373,6 @@ module Game :
     done;
     raise NoSolution
   (** Always raises an exception, Solution [l], NoSolution or Timeout*)
-
-    (* let length_solution (start_board : board) (end_board : board) (mode: mode) (max_steps : int) : int = 
-      try (solve start_board end_board mode max_steps; -1) with
-        Solution l -> List.length l 
-      | NoSolution -> -1 *)
-
-
 
 (* ------- LaTeX part ------- *)
 

@@ -36,12 +36,12 @@ let () =
 
 
 
-    let max_steps = 100000 in
+    let max_steps = 10000000 in
     try (Game.solve start_board end_board mode max_steps)
     with Game.Solution l -> ( 
-        Printf.printf "Solution found in %s moves!\n\n" (Int.to_string (List.length l) );
+        Printf.printf "Solution found in %s moves!\n" (Int.to_string (List.length l) );
         Game.write_file "solution.tex" (Game.simple_latex l start_board end_board);
-        Printf.printf "Written in %s with success!\n\n" output_file)
+        Printf.printf "Written in %s with success!\n" output_file)
     | Game.NoSolution -> print_string "No solution"
     | Game.Timeout -> print_string "No solution found (timeout)"
   )

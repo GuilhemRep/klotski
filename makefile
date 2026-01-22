@@ -15,18 +15,21 @@ clean:
 	dune clean
 	rm -rf *.cmi *.cmx *.o *.cmo *~ *.tex *.aux *.log *.pdf
 
-run:
+test:
+	dune runtest
+
+full:
 	./_build/default/klotski.exe start.txt end.txt 0 solution.tex
-	pdflatex solution.tex
+	pdflatex solution.tex > /dev/null 2>&1
 	rm -rf *.aux *.log
 
 lab:
 	./_build/default/klotski.exe start.txt end.txt 1 solution.tex
-	pdflatex solution.tex
+	pdflatex solution.tex > /dev/null 2>&1
 	rm -rf *.aux *.log
 
-shape:
+tangram:
 	./_build/default/klotski.exe start.txt end.txt 2 solution.tex
-	pdflatex solution.tex
+	pdflatex solution.tex > /dev/null 2>&1
 	rm -rf *.aux *.log
 

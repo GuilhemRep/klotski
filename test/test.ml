@@ -1,12 +1,12 @@
 open Game;;
 
 let () = 
-    let ic = open_in "classical_start.txt" in
+    let ic = open_in "../classical/start.txt" in
     let n = in_channel_length ic in
     let content1 = really_input_string ic n in
     close_in ic;
 
-    let ic = open_in "classical_end.txt" in
+    let ic = open_in "../classical/end.txt" in
     let n = in_channel_length ic in
     let content2 = really_input_string ic n in
     close_in ic; 
@@ -29,12 +29,12 @@ let () =
 
 
 let () = 
-    let ic = open_in "escape_start.txt" in
+    let ic = open_in "../escape/start.txt" in
     let n = in_channel_length ic in
     let content1 = really_input_string ic n in
     close_in ic;
 
-    let ic = open_in "escape_end.txt" in
+    let ic = open_in "../escape/end.txt" in
     let n = in_channel_length ic in
     let content2 = really_input_string ic n in
     close_in ic; 
