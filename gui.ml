@@ -3,12 +3,14 @@ open Game
 
 (* ---------- Configuration ---------- *)
 
-let window_width  = 690
-let window_height = 500
-let cell_size  = 30
+let window_width  = 900
+let window_height = 600
 
-let border_offset = 10
-let end_grid_offset = (10 * cell_size + border_offset + 30)
+let win_w = ref window_width
+let win_h = ref window_height
+
+
+let cell_size  = 40
 
 let colors = [|
   white;
@@ -22,6 +24,9 @@ let colors = [|
   rgb 255 127 127;
   rgb 127 255 127;
   rgb 127 127 255;
+  rgb 200 63 31;
+  rgb 31 200 63;
+  rgb 63 31 200;
 |]
 
 type rect = { x : int; y : int; w : int; h : int }
@@ -81,16 +86,16 @@ let grid_to_string g =
 (* ---------- Drawing ---------- *)
 
 let draw_cell_start r c =
-  let x = c * cell_size + border_offset in
-  let y = r * cell_size + border_offset in
+  let x = c * cell_size + !win_w/100 in
+  let y = r * cell_size + !win_h/100 in
   set_color colors.(!start_grid.(r).(c));
   fill_rect x y cell_size cell_size;
   set_color black;
   draw_rect x y cell_size cell_size
 
 let draw_cell_end r c =
-  let x = end_grid_offset + c * cell_size + border_offset in
-  let y = r * cell_size + border_offset in
+  let x = (10 * cell_size + !win_w/100 + 2* !win_w/100) + c * cell_size + !win_w/100 in
+  let y = r * cell_size + !win_h/100 in
   set_color colors.(!end_grid.(r).(c));
   fill_rect x y cell_size cell_size;
   set_color black;
@@ -98,7 +103,7 @@ let draw_cell_end r c =
 
 let draw_grid_start () =
   set_color white;
-  fill_rect 0 0 (10 * cell_size + border_offset) (10 * cell_size + border_offset);
+  fill_rect 0 0 (10 * cell_size + !win_w/100) (10 * cell_size + !win_h/100);
   set_color black;
   for r = 0 to !rows - 1 do
     for c = 0 to !cols - 1 do
@@ -108,7 +113,7 @@ let draw_grid_start () =
 
 let draw_grid_end () =
   set_color white;
-  fill_rect end_grid_offset 0 (10 * cell_size + border_offset) (10 * cell_size + border_offset);
+  fill_rect (10 * cell_size + !win_w/100 + 2* !win_w/100) 0 (10 * cell_size + !win_w/100) (10 * cell_size + !win_h/100);
   set_color black;
   for r = 0 to !rows - 1 do
     for c = 0 to !cols - 1 do
@@ -272,9 +277,9 @@ let palette =
 (* ---------- Mouse handling ---------- *)
 
 let cell_from_mouse x y =
-  let cs = (x- border_offset) / cell_size in
-  let ce = (x-end_grid_offset-border_offset) / cell_size in
-  let r = (y-border_offset) / cell_size in
+  let cs = (x- !win_w/100) / cell_size in
+  let ce = (x-2* !win_w/100 - (10 * cell_size + !win_w/100 + 2* !win_w/100) ) / cell_size in
+  let r = (y- !win_w/100) / cell_size in
   if r >= 0 && r < !rows && cs >= 0 && cs < !cols then
     Some (0,r, cs)
   else if r >= 0 && r < !rows && ce >= 0 && ce < !cols then
@@ -328,8 +333,13 @@ let rec loop () =
 
 let () =
   open_graph (Printf.sprintf " %dx%d" window_width window_height);
+  win_w := size_x ();
+  win_h := size_y ();
   set_window_title "Klotski";
   auto_synchronize true;
+  set_color yellow;
+  fill_rect (!win_w/100) (!win_h/100) (98* !win_w/100) (98* !win_h/100);
+
   draw_grids ();
 
   moveto

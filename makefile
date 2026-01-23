@@ -37,5 +37,5 @@ gui:
 	./_build/default/gui.exe
 	./_build/default/klotski.exe start.txt end.txt mode.txt solution.tex
 	pdflatex solution.tex > /dev/null 2>&1
-	rm -rf *.aux *.log
+	rm -rf *.aux *.log mode.txt
 	open solution.pdf
